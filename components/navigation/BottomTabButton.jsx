@@ -13,6 +13,7 @@ export default function BottomTabButton({ route, actual, index, navigation }) {
   const colorScheme = useColorScheme();
 
   const icon_scale = useAnimatedValue(1);
+  const icon_rotate = useAnimatedValue(0);
 
   const is_focused = index == actual;
 
@@ -81,7 +82,15 @@ export default function BottomTabButton({ route, actual, index, navigation }) {
       activeOpacity={1}
     >
       <Animated.View
-        style={[styles.icon, { transform: [{ scale: icon_scale }] }]}
+        style={[
+          styles.icon,
+          {
+            transform: [
+              { scale: icon_scale },
+              { rotate: icon_rotate.interpolate },
+            ],
+          },
+        ]}
       >
         {label()}
       </Animated.View>

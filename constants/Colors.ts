@@ -3,24 +3,36 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const water_matters_blue = "#0660FB";
+const water_matters_dark_blue = "#004ED5";
+const stroke_grey = "#F1F2F6";
+const bg_grey = "#F7F7F7";
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    light_text: "#fff",
+    dark_text: "#000",
+    secondary_text: "#909090",
+    stroke: stroke_grey,
+    bg: bg_grey,
+
+    tint: water_matters_blue,
+    dark_tint: water_matters_dark_blue,
+
+    tabIconDefault: "#909090",
+    tabIconSelected: "#000",
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    light_text: "#fff",
+    dark_text: "#000",
+    secondary_text: "#909090",
+    stroke: stroke_grey,
+    bg: bg_grey,
+
+    tint: water_matters_blue,
+    dark_tint: water_matters_dark_blue,
+
+    tabIconDefault: "#909090",
+    tabIconSelected: "#000",
   },
 };

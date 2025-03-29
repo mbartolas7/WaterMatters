@@ -1,16 +1,33 @@
 import {
   Animated,
   StyleSheet,
-  Text,
   TouchableOpacity,
   useAnimatedValue,
 } from "react-native";
 import { House, ChartColumn, Trophy, BookMarked } from "lucide-react-native";
-import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme.web";
+import { BottomTabNavigationEventMap } from "@react-navigation/bottom-tabs";
+import {
+  NavigationHelpers,
+  NavigationRoute,
+  ParamListBase,
+} from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
-export default function BottomTabButton({ route, actual, index, navigation }) {
-  const colorScheme = useColorScheme();
+interface BottomTabButtonProps {
+  route: NavigationRoute<ParamListBase, string>;
+  actual: Number;
+  index: Number;
+  navigation: NavigationHelpers<ParamListBase, BottomTabNavigationEventMap>;
+}
+
+export default function BottomTabButton({
+  route,
+  actual,
+  index,
+  navigation,
+}: BottomTabButtonProps) {
+  const theme = useThemeColor();
 
   const icon_scale = useAnimatedValue(1);
   const icon_rotate = useAnimatedValue(0);
@@ -18,10 +35,7 @@ export default function BottomTabButton({ route, actual, index, navigation }) {
   const is_focused = index == actual;
 
   const label = () => {
-    const color =
-      Colors[colorScheme ?? "light"][
-        is_focused ? "tabIconSelected" : "tabIconDefault"
-      ];
+    const color = theme[is_focused ? "tab_icon_selected" : "tab_icon_default"];
     switch (route.name) {
       case "index":
         return <House color={color} />;
@@ -42,16 +56,33 @@ export default function BottomTabButton({ route, actual, index, navigation }) {
   };
 
   const handlePressIn = () => {
+    Animated.spring(icon_scale, {
+      toValue: 1.1,
+      useNativeDriver: true,
+    }).start();
+
+    Haptics.selectionAsync();
+    // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    const rotate_anim_duration = 200;
     if (is_focused) {
-      Animated.spring(icon_scale, {
-        toValue: 1.2,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.spring(icon_scale, {
-        toValue: 1.2,
-        useNativeDriver: true,
-      }).start();
+      Animated.sequence([
+        Animated.timing(icon_rotate, {
+          toValue: -1,
+          duration: rotate_anim_duration / 1.5,
+          useNativeDriver: true,
+        }),
+        Animated.timing(icon_rotate, {
+          toValue: 1,
+          duration: rotate_anim_duration * 1.5,
+          useNativeDriver: true,
+        }),
+        Animated.timing(icon_rotate, {
+          toValue: 0,
+          duration: rotate_anim_duration,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   };
 
@@ -78,7 +109,6 @@ export default function BottomTabButton({ route, actual, index, navigation }) {
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={handleNavigate}
-      // disabled={is_focused}
       activeOpacity={1}
     >
       <Animated.View
@@ -87,7 +117,12 @@ export default function BottomTabButton({ route, actual, index, navigation }) {
           {
             transform: [
               { scale: icon_scale },
-              { rotate: icon_rotate.interpolate },
+              {
+                rotate: icon_rotate.interpolate({
+                  inputRange: [-1, 0, 1],
+                  outputRange: ["-8deg", "0deg", "8deg"],
+                }),
+              },
             ],
           },
         ]}

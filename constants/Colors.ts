@@ -19,8 +19,10 @@ export const Colors = {
     tint: water_matters_blue,
     dark_tint: water_matters_dark_blue,
 
-    tabIconDefault: "#909090",
-    tabIconSelected: "#000",
+    tab_icon_default: "#909090",
+    tab_icon_selected: "#000",
+
+    blur_tint: "systemUltraThinMaterialDark",
   },
   dark: {
     light_text: "#fff",
@@ -32,7 +34,9 @@ export const Colors = {
     tint: water_matters_blue,
     dark_tint: water_matters_dark_blue,
 
-    tabIconDefault: "#909090",
-    tabIconSelected: "#000",
+    tab_icon_default: "#909090",
+    tab_icon_selected: "#000",
+
+    blur_tint: "systemUltraThinMaterialLight",
   },
 };

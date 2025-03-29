@@ -11,11 +11,11 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "components/navigation/BottomTab.jsx",
-    "components/navigation/BottomTabButton.jsx",
-    "app/(tabs)/challenges.jsx",
-    "app/(tabs)/tips.jsx",
-    "app/(tabs)/index.jsx",
-    "app/(tabs)/charts.jsx"
+    "components/navigation/BottomTab.tsx",
+    "components/navigation/BottomTabButton.tsx",
+    "app/(tabs)/challenges.tsx",
+    "app/(tabs)/tips.tsx",
+    "app/(tabs)/index.tsx",
+    "app/(tabs)/charts.tsx"
   ]
 }

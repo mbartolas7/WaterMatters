@@ -1,27 +1,25 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { Colors } from "@/constants/Colors";
-
-import BottomTabButton from "./BottomTabButton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
-export default function BottomTab(props) {
+import BottomTabButton from "./BottomTabButton";
+
+import { useThemeColor } from "@/hooks/useThemeColor";
+
+export default function BottomTab(props: BottomTabBarProps) {
   const { state, descriptors, navigation } = props;
-  const colorScheme = useColorScheme();
+
+  const theme = useThemeColor();
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.bottom_tab, { bottom: insets.bottom }]}>
       <BlurView
-        style={[
-          styles.bottom_tab_icons,
-          { borderColor: Colors[colorScheme ?? "light"].stroke },
-        ]}
+        style={[styles.bottom_tab_icons, { borderColor: theme.stroke }]}
         intensity={10}
-        tint="systemUltraThinMaterialDark"
+        tint={theme.blur_tint}
       >
         {state.routes.map((route, index) => (
           <BottomTabButton

@@ -18,7 +18,7 @@ export default function BottomTab(props: BottomTabBarProps) {
     <View style={[styles.bottom_tab, { bottom: insets.bottom }]}>
       <BlurView
         style={[styles.bottom_tab_icons, { borderColor: theme.stroke }]}
-        intensity={10}
+        intensity={15}
         tint={theme.blur_tint}
       >
         {state.routes.map((route, index) => (

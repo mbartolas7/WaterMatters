@@ -99,18 +99,19 @@ export default function HomeScreen() {
         numColumns={2}
         style={styles.main}
         renderItem={({ item, index }) =>
-          item.size == 0 ? (
-            <></>
-          ) : (
-            <View
-              style={[
-                styles.widget,
-                item.size === 2 ? styles.fullWidth : styles.halfWidth,
-              ]}
-            >
-              <WidgetListItem {...item} key={index} />
-            </View>
-          )
+          // item.size == 0 ? (
+          //   <></>
+          // ) : (
+          //   <View
+          //     style={[
+          //       styles.widget,
+          //       item.size === 2 ? styles.fullWidth : styles.halfWidth,
+          //     ]}
+          //   >
+          //     <WidgetListItem {...item} key={index} />
+          //   </View>
+          // )
+          item.size == 0 ? <></> : <WidgetListItem {...item} key={index} />
         }
       />
     </View>
@@ -140,7 +141,6 @@ const styles = StyleSheet.create({
   main: {
     // columnGap: 10,
   },
-  widget: {},
   fullWidth: {
     width: "100%", // ✅ Widget pleine largeur
   },

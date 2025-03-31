@@ -9,10 +9,10 @@ import {
 import * as Haptics from "expo-haptics";
 
 interface FilterProps {
-  id: String;
+  id: string;
   name: string;
   selected: boolean;
-  handleSelectFilter: (filter: String) => void;
+  handleSelectFilter: (filter: string) => void;
 }
 
 export default function FilterListItem(props: FilterProps) {

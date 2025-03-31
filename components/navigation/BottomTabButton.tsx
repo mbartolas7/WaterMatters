@@ -16,8 +16,8 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface BottomTabButtonProps {
   route: NavigationRoute<ParamListBase, string>;
-  actual: Number;
-  index: Number;
+  actual: number;
+  index: number;
   navigation: NavigationHelpers<ParamListBase, BottomTabNavigationEventMap>;
 }
 

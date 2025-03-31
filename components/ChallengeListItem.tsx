@@ -7,11 +7,11 @@ import moment from "moment";
 import "moment/locale/fr"; // Importer la locale française
 
 interface ChallengeProps {
-  title: String;
-  description: String;
+  title: string;
+  description: string;
   progression: number;
   success_date?: EpochTimeStamp;
-  key: Number;
+  key: number;
 }
 
 export default function ChallengeListItem(props: ChallengeProps) {

@@ -15,16 +15,9 @@ import { useEffect, useState } from "react";
 import FilterListItem from "@/components/FilterListItem";
 import ChallengeListItem from "@/components/ChallengeListItem";
 
-// interface FilterProps {
-//   id: String;
-//   name: string;
-//   selected: boolean;
-//   setSelectedFilter: React.Dispatch<React.SetStateAction<String>>; // Le type pour setSelectedFilter
-// }
-
 interface ChallengeProps {
-  title: String;
-  description: String;
+  title: string;
+  description: string;
   progression: number;
   success_dat?: EpochTimeStamp;
 }
@@ -33,7 +26,7 @@ export default function ChallengesScreen() {
   const insets = useSafeAreaInsets();
   const theme = useThemeColor();
 
-  const [selectedFilter, setSelectedFilter] = useState<String>("all");
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   const [challenges, setChallenges] = useState<ChallengeProps[]>([]);
 
@@ -92,7 +85,7 @@ export default function ChallengesScreen() {
     setChallenges(challenges_data);
   }, []);
 
-  const handleSelectFilter = (filter: String) => {
+  const handleSelectFilter = (filter: string) => {
     let next_data = challenges_data;
 
     switch (filter) {

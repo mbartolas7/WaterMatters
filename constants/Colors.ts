@@ -14,6 +14,7 @@ export const Colors = {
     dark_text: "#000",
     secondary_text: "#909090",
     stroke: stroke_grey,
+    light_bg: "#fff",
     bg: bg_grey,
 
     tint: water_matters_blue,
@@ -29,6 +30,7 @@ export const Colors = {
     dark_text: "#000",
     secondary_text: "#909090",
     stroke: stroke_grey,
+    light_bg: "#fff",
     bg: bg_grey,
 
     tint: water_matters_blue,

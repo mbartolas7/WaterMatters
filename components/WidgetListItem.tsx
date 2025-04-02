@@ -1,4 +1,11 @@
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  PanResponder,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -84,7 +91,8 @@ export default function WidgetListItem(props: WidgetProps) {
         {
           backgroundColor: theme.light_text,
           borderColor: theme.stroke,
-          width: size == 1 ? "50%" : "100%",
+          flex: 1,
+          // width: size == 1 ? "50%" : "100%",
         },
       ]}
     >

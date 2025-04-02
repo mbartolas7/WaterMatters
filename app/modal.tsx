@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 10,
+    paddingHorizontal: 15,
   },
 
   header: {
@@ -156,6 +157,5 @@ const styles = StyleSheet.create({
   list: {
     // flex: 1,
     width: "100%",
-    paddingHorizontal: 15,
   },
 });

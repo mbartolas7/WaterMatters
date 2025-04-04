@@ -33,7 +33,9 @@ export default function HomeScreen() {
     {
       size: 1,
       type: "goal",
-      config: {},
+      config: {
+        id: 1,
+      },
     },
     {
       size: 1,
@@ -57,12 +59,16 @@ export default function HomeScreen() {
     {
       size: 1,
       type: "goal",
-      config: {},
+      config: {
+        id: 2,
+      },
     },
     {
       size: 1,
       type: "goal",
-      config: {},
+      config: {
+        id: 1,
+      },
     },
     {
       size: 2,

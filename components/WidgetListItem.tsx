@@ -16,8 +16,6 @@ interface WidgetProps {
 export default function WidgetListItem(props: WidgetProps) {
   const { size, type, config } = props;
 
-  const [widgetWidth, setWidgetWidth] = useState(undefined);
-
   const theme = useThemeColor();
 
   const chart_width =
@@ -26,26 +24,27 @@ export default function WidgetListItem(props: WidgetProps) {
       : (Dimensions.get("window").width - 30 - 10) / 2;
 
   const bar_sample_data = [
-    { value: 250, label: "M" },
+    { value: 250, label: "L" },
     // { value: 500, label: "T", frontColor: "#177AD5" },
-    { value: 500, label: "T" },
-    { value: 745, label: "W" },
-    { value: 320, label: "T" },
-    { value: 600, label: "F" },
+    { value: 500, label: "M" },
+    { value: 745, label: "M" },
+    { value: 320, label: "J" },
+    { value: 600, label: "V" },
     { value: 256, label: "S" },
-    { value: 680, label: "S" },
+    { value: 680, label: "D" },
   ];
 
   const pie_sample_data = [
     { value: 70, color: theme.tint },
-    { value: 30, color: "lightgray" },
+    { value: 30, color: theme.light_bg },
   ];
 
   const renderContent = () => {
     switch (type) {
       case "chart":
         return (
-          <View style={styles.bar_chart}>
+          <View style={styles.section}>
+            <Text style={styles.title}>Cette semaine : </Text>
             <BarChart
               data={bar_sample_data}
               frontColor={theme.tint}
@@ -57,65 +56,59 @@ export default function WidgetListItem(props: WidgetProps) {
               spacing={(chart_width - 30 - 50) / bar_sample_data.length - 20}
               yAxisLabelWidth={40}
               yAxisTextStyle={[
-                styles.chart_ytext,
+                styles.bar_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              xAxisLabelTextStyle={[
+                styles.bar_chart_text,
                 { color: theme.secondary_text },
               ]}
               disablePress
               noOfSections={3}
               disableScroll
               // initialSpacing={8}
-              // endSpacing={5}
+              endSpacing={5}
+              yAxisLabelSuffix="L"
             />
           </View>
         );
         break;
       case "goal":
-        // const radius = chart_width / 2 / 1.5;
-        const radius = chart_width / 2 / 3;
+        const radius = 20;
         return (
-          // <View style={{    gap: 20,
-          // alignItems: "center",
-          // justifyContent: "center",}}>
-          //   <PieChart
-          //     data={pie_sample_data}
-          //     innerRadius={radius - 20}
-          //     radius={radius}
-          //     donut
-          //     strokeColor={"red"}
-          //   />
-          //   <Text style={[styles.text, { color: theme.dark_text }]}>
-          //     <Text style={styles.bold_text}>Douche : </Text> 7 / 10 litres
-          //     consommés
-          //   </Text>
-          // </View>
-          <View style={styles.pie_chart}>
-            <PieChart
-              data={pie_sample_data}
-              innerRadius={radius - 12.5}
-              radius={radius}
-              donut
-              strokeColor={"red"}
-            />
-            <View style={styles.pie_chart_text}>
-              <Text style={[styles.text, { color: theme.dark_text }]}>
-                <Text style={styles.bold_text}>Douche : {"\n"}</Text> 7 / 10
-                litres consommés
-              </Text>
+          <View style={styles.section}>
+            <Text style={styles.title}>
+              Objectif sur {config.id == 1 ? "Douche" : "Lavabos"} :
+            </Text>
+            <View style={styles.section_pie_chart}>
+              <PieChart
+                data={pie_sample_data}
+                innerRadius={radius - 8}
+                radius={radius}
+                donut
+                strokeWidth={1}
+                strokeColor={theme.stroke}
+                innerCircleBorderColor={theme.stroke}
+                innerCircleBorderWidth={1}
+              />
+              <Text style={styles.section_pie_chart_text}>1 / 10L</Text>
             </View>
           </View>
         );
+        break;
 
       case "current":
         return (
-          <View style={styles.current}>
+          <View style={styles.section}>
             <Text style={styles.title}>En cours d'utilisation : </Text>
             <Text style={styles.text}>Douche salle de bain</Text>
           </View>
         );
+        break;
 
       case "logs":
         return (
-          <View style={styles.logs}>
+          <View style={styles.section}>
             <Text style={styles.title}>Dernières utilisations : </Text>
             <Text style={styles.text}> • Douche | Salle de bain</Text>
             <Text style={styles.text}> • Évier | Cuisine</Text>
@@ -123,6 +116,7 @@ export default function WidgetListItem(props: WidgetProps) {
             <Text style={styles.text}> • Machine à laver | Buanderie</Text>
           </View>
         );
+        break;
       default:
         return <Text>null</Text>;
         break;
@@ -139,7 +133,7 @@ export default function WidgetListItem(props: WidgetProps) {
         },
       ]}
     >
-      {widgetWidth && renderContent()}
+      {renderContent()}
     </View>
   );
 }
@@ -157,11 +151,11 @@ const styles = StyleSheet.create({
   bar_chart: {
     width: "100%",
     paddingVertical: 5,
+    gap: 10,
   },
 
-  chart_ytext: {
+  bar_chart_text: {
     fontFamily: "Figtree-Medium",
-    color: "red",
   },
 
   pie_chart: {
@@ -173,15 +167,20 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
 
-  current: {
+  section: {
     flex: 1,
-    gap: 5,
+    gap: 10,
+    width: "100%",
   },
 
-  logs: {
-    flex: 1,
-    gap: 5,
-    width: "100%",
+  section_pie_chart: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  section_pie_chart_text: {
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 16,
   },
 
   title: {

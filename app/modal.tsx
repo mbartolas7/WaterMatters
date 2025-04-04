@@ -3,23 +3,11 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { router } from "expo-router";
 import {
   FlatList,
-  LayoutChangeEvent,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withDecay,
-} from "react-native-reanimated";
 
 export default function Modal() {
   const theme = useThemeColor();
@@ -75,21 +63,6 @@ export default function Modal() {
     router.back();
   };
 
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-
-  const pan_gesture = Gesture.Pan().onUpdate((event) => {
-    translateX.value = event.translationX;
-    translateY.value = event.translationY;
-  });
-
-  const animated_styles = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-    ],
-  }));
-
   return (
     <View style={[styles.container, { backgroundColor: theme.light_bg }]}>
       <View style={styles.header}>
@@ -105,22 +78,16 @@ export default function Modal() {
       <FlatList
         style={styles.list}
         data={widgets}
-        scrollEnabled={false}
+        showsVerticalScrollIndicator={false}
         // Vertical gap
-        contentContainerStyle={{ gap: 10, paddingTop: 10 }}
+        contentContainerStyle={{ gap: 10, paddingTop: 10, paddingBottom: 30 }}
         // Horizontal gap
         columnWrapperStyle={{ gap: 10 }}
         numColumns={2}
         renderItem={({ item, index }) => {
           if (item.size == 0) return <></>;
 
-          return (
-            <GestureDetector gesture={pan_gesture}>
-              <Animated.View style={{ ...animated_styles }}>
-                <WidgetListItem key={index} {...item} />
-              </Animated.View>
-            </GestureDetector>
-          );
+          return <WidgetListItem key={index} {...item} />;
         }}
       />
     </View>

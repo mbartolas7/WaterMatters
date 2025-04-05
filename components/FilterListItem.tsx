@@ -36,16 +36,17 @@ export default function FilterListItem(props: FilterProps) {
       toValue: 1,
       useNativeDriver: true,
     }).start();
-    setTimeout(() => {
-      handleSelectFilter(id);
-    }, 300);
+    // setTimeout(() => {
+    //   handleSelectFilter(id);
+    // }, 300);
   };
 
   return (
     <Animated.View style={{ transform: [{ scale: filter_scale }] }}>
       <TouchableOpacity
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        // onPressIn={handlePressIn}
+        // onPress={() => handleSelectFilter(id)}
+        // onPressOut={handlePressOut}
         activeOpacity={1}
         style={[
           styles.item,

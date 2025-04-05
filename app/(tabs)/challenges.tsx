@@ -11,9 +11,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Trophy } from "lucide-react-native";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import FilterListItem from "@/components/FilterListItem";
 import ChallengeListItem from "@/components/ChallengeListItem";
+import ButtonContainer from "@/components/button/ButtonContainer";
 
 interface ChallengeProps {
   title: string;
@@ -43,7 +44,7 @@ export default function ChallengesScreen() {
       name: "En cours",
       id: "in_progress",
     },
-  ];
+  ] as const;
 
   const challenges_data = [
     {
@@ -101,11 +102,16 @@ export default function ChallengesScreen() {
         break;
     }
 
-    console.log(next_data);
+    // console.log(next_data);
 
     setChallenges(next_data);
     setSelectedFilter(filter);
   };
+
+  const memoizedHandleSelectFilter = useCallback(
+    (filterId: string) => handleSelectFilter(filterId),
+    [selectedFilter] // Assure-toi que handleSelectFilter ne change pas
+  );
 
   const headerComponent = () => {
     return (

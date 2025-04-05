@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Animated, Pressable, useAnimatedValue } from "react-native";
 import * as Haptics from "expo-haptics";
 
@@ -13,9 +13,14 @@ export default function ButtonContainer({
 }: ButtonContainerProps) {
   const button_scale = useAnimatedValue(1);
 
+  useEffect(() => {
+    console.log("use effect");
+  });
+
   const handlePressIn = () => {
     Animated.spring(button_scale, {
-      toValue: 1.05,
+      // toValue: 1.05,
+      toValue: 2,
       useNativeDriver: true,
     }).start();
 

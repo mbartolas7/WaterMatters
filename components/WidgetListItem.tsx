@@ -143,7 +143,7 @@ export default function WidgetListItem(props: WidgetProps) {
           <View style={styles.section}>
             <View style={styles.section_header}>
               <Text style={styles.section_header_title}>
-                Dernières utilisations :{" "}
+                Dernières utilisations :
               </Text>
             </View>
             {/* <Text style={styles.title}>Dernières utilisations : </Text>

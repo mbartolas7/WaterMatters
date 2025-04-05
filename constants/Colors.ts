@@ -24,6 +24,9 @@ export const Colors = {
     tab_icon_selected: "#000",
 
     blur_tint: "systemUltraThinMaterialDark",
+
+    success: "#00B86B",
+    error: "#E53535",
   },
   dark: {
     light_text: "#fff",
@@ -40,5 +43,8 @@ export const Colors = {
     tab_icon_selected: "#000",
 
     blur_tint: "systemUltraThinMaterialLight",
+
+    success: "#00B86B",
+    error: "#E53535",
   },
 };

@@ -1,12 +1,8 @@
+import { StyleSheet, Text, View } from "react-native";
+
 import { useThemeColor } from "@/hooks/useThemeColor";
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useAnimatedValue,
-  Animated,
-} from "react-native";
-import * as Haptics from "expo-haptics";
+
+import ButtonContainer from "./button/ButtonContainer";
 
 interface FilterProps {
   id: string;
@@ -20,34 +16,9 @@ export default function FilterListItem(props: FilterProps) {
 
   const theme = useThemeColor();
 
-  const filter_scale = useAnimatedValue(1);
-
-  const handlePressIn = () => {
-    Animated.spring(filter_scale, {
-      toValue: 1.1,
-      useNativeDriver: true,
-    }).start();
-
-    Haptics.selectionAsync();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(filter_scale, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-    // setTimeout(() => {
-    //   handleSelectFilter(id);
-    // }, 300);
-  };
-
   return (
-    <Animated.View style={{ transform: [{ scale: filter_scale }] }}>
-      <TouchableOpacity
-        // onPressIn={handlePressIn}
-        // onPress={() => handleSelectFilter(id)}
-        // onPressOut={handlePressOut}
-        activeOpacity={1}
+    <ButtonContainer action={() => handleSelectFilter(id)}>
+      <View
         style={[
           styles.item,
           {
@@ -67,8 +38,8 @@ export default function FilterListItem(props: FilterProps) {
         >
           {name}
         </Text>
-      </TouchableOpacity>
-    </Animated.View>
+      </View>
+    </ButtonContainer>
   );
 }
 
@@ -78,6 +49,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderWidth: 2,
     borderRadius: 12,
+    overflow: "hidden", // Ajoute ceci
   },
   item_text: {
     fontSize: 16,

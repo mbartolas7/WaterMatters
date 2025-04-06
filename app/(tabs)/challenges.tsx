@@ -11,16 +11,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Trophy } from "lucide-react-native";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FilterListItem from "@/components/FilterListItem";
 import ChallengeListItem from "@/components/ChallengeListItem";
 import ButtonContainer from "@/components/button/ButtonContainer";
+import FilterList from "@/components/FilterList";
 
 interface ChallengeProps {
   title: string;
   description: string;
   progression: number;
-  success_dat?: EpochTimeStamp;
+  success_date?: EpochTimeStamp;
 }
 
 export default function ChallengesScreen() {
@@ -28,23 +29,9 @@ export default function ChallengesScreen() {
   const theme = useThemeColor();
 
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [selectedFilterRef, setSelectedFilterRef] = useState();
 
   const [challenges, setChallenges] = useState<ChallengeProps[]>([]);
-
-  const filters_data = [
-    {
-      name: "Tous",
-      id: "all",
-    },
-    {
-      name: "Réalisés",
-      id: "realized",
-    },
-    {
-      name: "En cours",
-      id: "in_progress",
-    },
-  ] as const;
 
   const challenges_data = [
     {
@@ -86,7 +73,7 @@ export default function ChallengesScreen() {
     setChallenges(challenges_data);
   }, []);
 
-  const handleSelectFilter = (filter: string) => {
+  const handleApplyFilter = (filter: string) => {
     let next_data = challenges_data;
 
     switch (filter) {
@@ -102,18 +89,11 @@ export default function ChallengesScreen() {
         break;
     }
 
-    // console.log(next_data);
-
     setChallenges(next_data);
     setSelectedFilter(filter);
   };
 
-  const memoizedHandleSelectFilter = useCallback(
-    (filterId: string) => handleSelectFilter(filterId),
-    [selectedFilter] // Assure-toi que handleSelectFilter ne change pas
-  );
-
-  const headerComponent = () => {
+  const headerComponent = useCallback(() => {
     return (
       <View style={styles.header_component}>
         <View style={styles.card}>
@@ -152,23 +132,10 @@ export default function ChallengesScreen() {
             </View>
           </LinearGradient>
         </View>
-        <ScrollView
-          horizontal
-          contentContainerStyle={{ gap: 8 }}
-          style={styles.list_filters}
-        >
-          {filters_data.map((filter, index) => (
-            <FilterListItem
-              {...filter}
-              key={index}
-              selected={selectedFilter == filter.id}
-              handleSelectFilter={handleSelectFilter}
-            />
-          ))}
-        </ScrollView>
+        <FilterList handleApplyFilter={handleApplyFilter} />
       </View>
     );
-  };
+  }, []);
 
   return (
     <View
@@ -221,7 +188,7 @@ const styles = StyleSheet.create({
   },
 
   header_component: {
-    gap: 20,
+    gap: 15,
   },
 
   card: {
@@ -258,13 +225,6 @@ const styles = StyleSheet.create({
   card_gradient_right: {
     justifyContent: "flex-end",
     padding: 5,
-  },
-
-  list_filters: {
-    marginBottom: 10,
-    width: Dimensions.get("window").width,
-    marginLeft: -15,
-    paddingLeft: 15,
   },
 
   list_challenges: {

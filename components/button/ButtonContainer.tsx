@@ -13,14 +13,9 @@ export default function ButtonContainer({
 }: ButtonContainerProps) {
   const button_scale = useAnimatedValue(1);
 
-  useEffect(() => {
-    console.log("use effect");
-  });
-
   const handlePressIn = () => {
     Animated.spring(button_scale, {
-      // toValue: 1.05,
-      toValue: 2,
+      toValue: 1.05,
       useNativeDriver: true,
     }).start();
 

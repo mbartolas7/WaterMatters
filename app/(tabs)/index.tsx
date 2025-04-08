@@ -15,6 +15,10 @@ import { router, useNavigation } from "expo-router";
 import WidgetListItem from "@/components/WidgetListItem";
 import ButtonContainer from "@/components/button/ButtonContainer";
 
+import firestore from "@react-native-firebase/firestore";
+
+const usersCollection = firestore().collection("uses");
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const theme = useThemeColor();

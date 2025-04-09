@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import {
+  Button,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import Animated, {
@@ -9,6 +17,7 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 import DateTimePicker, {
   DateType,
@@ -16,6 +25,9 @@ import DateTimePicker, {
 } from "react-native-ui-datepicker";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
+import moment from "moment";
+import { ChevronDown } from "lucide-react-native";
+import ButtonContainer from "@/components/button/ButtonContainer";
 
 export default function ChartsScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -24,6 +36,38 @@ export default function ChartsScreen() {
 
   const insets = useSafeAreaInsets();
   const theme = useThemeColor();
+
+  const defaultStyles = useDefaultStyles();
+
+  const today = new Date();
+  const [selectedDate, setSelectedDate] = useState<DateType>(today);
+
+  const [bottomSheetShown, setBottomSheetShown] = useState(false);
+
+  const date_picker_sheet = useRef<BottomSheet>(null);
+
+  const getDateText = () => {
+    let text = "";
+    if (moment(selectedDate).isSame(today, "day")) {
+      text += "Ajourd'hui, ";
+    } else if (
+      moment(selectedDate).isSame(moment(today).subtract(1, "day"), "day")
+    ) {
+      text += "Hier, ";
+    } else if (
+      moment(selectedDate).isSame(moment(today).subtract(2, "day"), "day")
+    ) {
+      text += "Avant-hier, ";
+    }
+
+    if (moment(selectedDate).isSame(today, "year")) {
+      text += moment(selectedDate).format("D MMMM");
+    } else {
+      text += moment(selectedDate).format("D MMMM YYYY");
+    }
+
+    return text;
+  };
 
   const headerAnimatedStyles = useAnimatedStyle(() => {
     return {
@@ -50,34 +94,88 @@ export default function ChartsScreen() {
     setHeaderHeight(height);
   };
 
+  const toggleShowBottomSheet = () => {
+    if (bottomSheetShown) {
+      date_picker_sheet.current?.close();
+    } else date_picker_sheet.current?.collapse();
+  };
+
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: theme.bg,
-          paddingTop: insets.top,
-        },
-      ]}
-    >
-      <Animated.View
-        style={[
-          styles.header,
-          headerAnimatedStyles,
-          { top: insets.top, backgroundColor: theme.bg },
-        ]}
-        onLayout={handleLayout}
+    <>
+      <TouchableWithoutFeedback
+        onPress={() => date_picker_sheet.current?.close()}
       >
-        <Text style={[styles.header_title, { color: theme.dark_text }]}>
-          Statistiques
-        </Text>
-      </Animated.View>
-      <Animated.ScrollView style={[styles.main, { paddingTop: headerHeight }]}>
-        <View style={styles.main_date}>
-          <Text></Text>
+        <View
+          style={[
+            styles.container,
+            {
+              backgroundColor: theme.bg,
+              paddingTop: insets.top,
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.header,
+              headerAnimatedStyles,
+              { top: insets.top, backgroundColor: theme.bg },
+            ]}
+            onLayout={handleLayout}
+          >
+            <Text style={[styles.header_title, { color: theme.dark_text }]}>
+              Statistiques
+            </Text>
+          </Animated.View>
+          <Animated.ScrollView
+            style={[styles.main, { paddingTop: headerHeight }]}
+          >
+            <TouchableOpacity
+              onPress={toggleShowBottomSheet}
+              style={styles.main_date}
+            >
+              <Text style={[styles.main_date_text, { color: theme.dark_text }]}>
+                {getDateText()}
+              </Text>
+              <ChevronDown color={theme.dark_text} />
+            </TouchableOpacity>
+          </Animated.ScrollView>
         </View>
-      </Animated.ScrollView>
-    </View>
+      </TouchableWithoutFeedback>
+      <BottomSheet
+        index={-1}
+        enablePanDownToClose
+        snapPoints={["50%", "65%"]}
+        ref={date_picker_sheet}
+        // handleComponent={() => <></>}
+      >
+        <BottomSheetView
+          style={[styles.bottom_sheet, { backgroundColor: theme.light_bg }]}
+        >
+          <DateTimePicker
+            mode="single"
+            date={selectedDate}
+            onChange={({ date }) => setSelectedDate(date)}
+            styles={{
+              ...defaultStyles,
+              today: { borderColor: "blue", borderWidth: 1 }, // Add a border to today's date
+              selected: { backgroundColor: "blue" }, // Highlight the selected day
+              selected_label: { color: "white" }, // Highlight the selected day label
+              month_label: styles.date_picker_text,
+              month_selector_label: styles.date_picker_title,
+              year_selector_label: styles.date_picker_title,
+              day_label: styles.date_picker_text,
+            }}
+            firstDayOfWeek={1}
+            locale="fr"
+            timeZone="Europe/Brussels"
+            showOutsideDays
+            navigationPosition="right"
+            monthsFormat="full"
+            maxDate={today}
+          />
+        </BottomSheetView>
+      </BottomSheet>
+    </>
   );
 }
 
@@ -105,5 +203,29 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 15,
   },
-  main_date: {},
+  main_date: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  main_date_text: {
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 18,
+    letterSpacing: -0.4,
+  },
+
+  bottom_sheet: {
+    paddingHorizontal: 12,
+  },
+
+  date_picker_title: {
+    textTransform: "capitalize",
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 18,
+  },
+  date_picker_text: {
+    textTransform: "capitalize",
+    paddingHorizontal: 2,
+    fontFamily: "Figtree-Medium",
+  },
 });

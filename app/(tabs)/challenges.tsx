@@ -1,20 +1,19 @@
-import {
-  Dimensions,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Trophy } from "lucide-react-native";
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import FilterListItem from "@/components/FilterListItem";
+
 import ChallengeListItem from "@/components/ChallengeListItem";
-import ButtonContainer from "@/components/button/ButtonContainer";
 import FilterList from "@/components/FilterList";
 
 interface ChallengeProps {
@@ -25,13 +24,17 @@ interface ChallengeProps {
 }
 
 export default function ChallengesScreen() {
-  const insets = useSafeAreaInsets();
-  const theme = useThemeColor();
+  const [headerHeight, setHeaderHeight] = useState(0);
 
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [selectedFilterRef, setSelectedFilterRef] = useState();
 
   const [challenges, setChallenges] = useState<ChallengeProps[]>([]);
+
+  const scrollY = useSharedValue(0);
+
+  const insets = useSafeAreaInsets();
+  const theme = useThemeColor();
 
   const challenges_data = [
     {
@@ -93,6 +96,31 @@ export default function ChallengesScreen() {
     setSelectedFilter(filter);
   };
 
+  const headerAnimatedStyles = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(scrollY.value > 50 ? 0 : 1, {
+        duration: 200,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      transform: [
+        {
+          translateY: withTiming(scrollY.value > 50 ? -40 : 0),
+        },
+      ],
+    };
+  });
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  const handleLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    setHeaderHeight(height);
+  };
+
   const headerComponent = useCallback(() => {
     return (
       <View style={styles.header_component}>
@@ -147,22 +175,33 @@ export default function ChallengesScreen() {
         },
       ]}
     >
-      <View style={styles.header}>
+      <Animated.View
+        style={[
+          styles.header,
+          headerAnimatedStyles,
+          { top: insets.top, backgroundColor: theme.bg },
+        ]}
+        onLayout={handleLayout}
+      >
         <Text style={[styles.header_title, { color: theme.dark_text }]}>
           Défis
         </Text>
-      </View>
+      </Animated.View>
 
-      <FlatList
-        style={styles.list_challenges}
-        data={challenges}
-        ListHeaderComponent={headerComponent}
-        contentContainerStyle={{ gap: 6, paddingBottom: 120 }}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item, index }) => (
-          <ChallengeListItem key={index} {...item} />
-        )}
-      />
+      {headerHeight !== 0 && (
+        <Animated.FlatList
+          style={[styles.main, { paddingTop: headerHeight }]}
+          data={challenges}
+          ListHeaderComponent={headerComponent}
+          contentContainerStyle={{ gap: 6, paddingBottom: 120, paddingTop: 15 }}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item, index }) => (
+            <ChallengeListItem key={index} {...item} />
+          )}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+        />
+      )}
     </View>
   );
 }
@@ -174,12 +213,15 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    width: "100%",
+    width: Dimensions.get("window").width,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 30,
-    marginBlock: 25,
+    paddingTop: 30,
+    paddingBottom: 10,
+    position: "absolute",
+    zIndex: 9999,
+    paddingHorizontal: 15,
   },
   header_title: {
     fontFamily: "Figtree-SemiBold",
@@ -227,7 +269,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
 
-  list_challenges: {
+  main: {
     flex: 1,
     width: Dimensions.get("window").width,
     marginLeft: -15,

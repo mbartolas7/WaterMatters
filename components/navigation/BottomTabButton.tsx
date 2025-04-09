@@ -13,6 +13,7 @@ import {
 } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useEffect } from "react";
 
 interface BottomTabButtonProps {
   route: NavigationRoute<ParamListBase, string>;

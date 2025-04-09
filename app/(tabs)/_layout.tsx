@@ -1,5 +1,4 @@
 import React from "react";
-import { StyleSheet } from "react-native";
 import { Tabs } from "expo-router";
 
 import { useColorScheme } from "@/hooks/useColorScheme";

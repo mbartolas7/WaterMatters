@@ -1,7 +1,5 @@
 import {
   FlatList,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,13 +9,14 @@ import { Cog, PencilLine } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { router, useNavigation } from "expo-router";
+import { Link, router, useNavigation } from "expo-router";
 import WidgetListItem from "@/components/WidgetListItem";
 import ButtonContainer from "@/components/button/ButtonContainer";
 
 import firestore from "@react-native-firebase/firestore";
+import { useEffect } from "react";
 
-const usersCollection = firestore().collection("uses");
+const usesCollection = firestore().collection("uses");
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -26,6 +25,19 @@ export default function HomeScreen() {
   const navigation = useNavigation();
 
   const handleNavigateToSettings = () => {};
+
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const getData = async () => {
+    // const users = await usesCollection.get().then((querySnapshot) => {
+    //   console.log("Total uses: ", querySnapshot.size);
+    //   querySnapshot.forEach((documentSnapshot) => {
+    //     console.log("use ID: ", documentSnapshot.id, documentSnapshot.data());
+    //   });
+    // });
+  };
 
   const widgets = [
     {
@@ -94,9 +106,9 @@ export default function HomeScreen() {
         <Text style={[styles.header_title, { color: theme.dark_text }]}>
           Bonjour Mathias 👋
         </Text>
-        <TouchableOpacity onPress={handleNavigateToSettings}>
+        <Link href="settings">
           <Cog color={theme.dark_text} />
-        </TouchableOpacity>
+        </Link>
       </View>
       <FlatList
         // Vertical gap
@@ -123,7 +135,7 @@ export default function HomeScreen() {
             >
               <PencilLine color={theme.dark_text} />
               <Text style={[styles.button_text, { color: theme.dark_text }]}>
-                Personaliser les widgets
+                Ajouter des widgets
               </Text>
             </View>
           </ButtonContainer>

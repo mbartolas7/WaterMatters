@@ -15,7 +15,7 @@
     "components/navigation/BottomTabButton.tsx",
     "app/(tabs)/challenges.tsx",
     "app/(tabs)/tips.tsx",
-    "app/(tabs)/index.tsx",
+    "app/(tabs)/index/index.tsx",
     "app/(tabs)/charts.tsx"
   ]
 }

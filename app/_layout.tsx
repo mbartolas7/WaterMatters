@@ -9,9 +9,13 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+
+import { ShowBottomTabProvider } from "@/contexts/ShowBottomTabContext";
+import { useShowBottomTab } from "@/hooks/useShowBottomTab";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -27,10 +31,14 @@ export default function RootLayout() {
     "Figtree-extrabold": require("../assets/fonts/Figtree-ExtraBold.ttf"),
   });
 
+  const { setShowBottomTab } = useShowBottomTab();
+
   useEffect(() => {
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
+
+    // setShowBottomTab(true)
   }, [loaded, error]);
 
   if (!loaded && !error) {
@@ -40,18 +48,22 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-          <Stack.Screen
-            name="modal"
-            options={{
-              presentation: "modal",
-              headerShown: false,
-            }}
-          />
-        </Stack>
-        <StatusBar style="auto" />
+        <BottomSheetModalProvider>
+          <ShowBottomTabProvider>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+              <Stack.Screen
+                name="modal"
+                options={{
+                  presentation: "modal",
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+            <StatusBar style="auto" />
+          </ShowBottomTabProvider>
+        </BottomSheetModalProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

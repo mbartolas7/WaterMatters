@@ -23,11 +23,61 @@ interface ChallengeProps {
   success_date?: EpochTimeStamp;
 }
 
+const filters_data = [
+  {
+    name: "Tous",
+    id: "all",
+  },
+  {
+    name: "Réalisés",
+    id: "realized",
+  },
+  {
+    name: "En cours",
+    id: "in_progress",
+  },
+];
+
+const challenges_data = [
+  {
+    title: "Économiseur d’eau I",
+    description:
+      "Ceci est le premier challenge à réaliser. Il consiste en quelque chose qui sera défini plus tard.",
+    progression: 100,
+    success_date: 1743347847000,
+  },
+  {
+    title: "Économiseur d’eau II",
+    description: "Ceci est le second challenge à réaliser.",
+    progression: 67,
+    success_date: undefined,
+  },
+  {
+    title: "Économiseur d’eau III",
+    description: "Ceci est le troisème challenge à réaliser.",
+    progression: 0,
+    success_date: undefined,
+  },
+  {
+    title: "Water Master I",
+    description:
+      "Ceci est le troisième challenge à réaliser. Il consiste en quelque chose qui sera défini plus tard.",
+    progression: 100,
+    success_date: 1740925047000,
+  },
+  {
+    title: "Water Master II",
+    description:
+      "Ceci est le quatrième challenge à réaliser. Il est en cours de réalisation.",
+    progression: 100,
+    success_date: 1740838647000,
+  },
+];
+
 export default function ChallengesScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
-  const [selectedFilterRef, setSelectedFilterRef] = useState();
 
   const [challenges, setChallenges] = useState<ChallengeProps[]>([]);
 
@@ -35,42 +85,6 @@ export default function ChallengesScreen() {
 
   const insets = useSafeAreaInsets();
   const theme = useThemeColor();
-
-  const challenges_data = [
-    {
-      title: "Économiseur d’eau I",
-      description:
-        "Ceci est le premier challenge à réaliser. Il consiste en quelque chose qui sera défini plus tard.",
-      progression: 100,
-      success_date: 1743347847000,
-    },
-    {
-      title: "Économiseur d’eau II",
-      description: "Ceci est le second challenge à réaliser.",
-      progression: 67,
-      success_date: undefined,
-    },
-    {
-      title: "Économiseur d’eau III",
-      description: "Ceci est le troisème challenge à réaliser.",
-      progression: 0,
-      success_date: undefined,
-    },
-    {
-      title: "Water Master I",
-      description:
-        "Ceci est le troisième challenge à réaliser. Il consiste en quelque chose qui sera défini plus tard.",
-      progression: 100,
-      success_date: 1740925047000,
-    },
-    {
-      title: "Water Master II",
-      description:
-        "Ceci est le quatrième challenge à réaliser. Il est en cours de réalisation.",
-      progression: 100,
-      success_date: 1740838647000,
-    },
-  ];
 
   useEffect(() => {
     setChallenges(challenges_data);
@@ -160,7 +174,11 @@ export default function ChallengesScreen() {
             </View>
           </LinearGradient>
         </View>
-        <FilterList handleApplyFilter={handleApplyFilter} />
+        <FilterList
+          filters={filters_data}
+          handleApplyFilter={handleApplyFilter}
+          default_filter="all"
+        />
       </View>
     );
   }, []);

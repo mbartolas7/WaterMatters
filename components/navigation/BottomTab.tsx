@@ -7,6 +7,7 @@ import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import BottomTabButton from "./BottomTabButton";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useShowBottomTab } from "@/hooks/useShowBottomTab";
 
 export default function BottomTab(props: BottomTabBarProps) {
   const { state, descriptors, navigation } = props;
@@ -14,8 +15,15 @@ export default function BottomTab(props: BottomTabBarProps) {
   const theme = useThemeColor();
   const insets = useSafeAreaInsets();
 
+  const { showBottomTab } = useShowBottomTab();
+
   return (
-    <View style={[styles.bottom_tab, { bottom: insets.bottom }]}>
+    <View
+      style={[
+        styles.bottom_tab,
+        { bottom: insets.bottom, display: showBottomTab ? "flex" : "none" },
+      ]}
+    >
       <BlurView
         style={[styles.bottom_tab_icons, { borderColor: theme.stroke }]}
         intensity={15}

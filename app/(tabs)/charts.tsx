@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import {
-  Button,
   Dimensions,
   StyleSheet,
   Text,
@@ -17,17 +16,61 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
 import DateTimePicker, {
   DateType,
   useDefaultStyles,
 } from "react-native-ui-datepicker";
 
+import { BottomSheetView } from "@gorhom/bottom-sheet";
+
 import { useThemeColor } from "@/hooks/useThemeColor";
 import moment from "moment";
 import { ChevronDown } from "lucide-react-native";
+import { useShowBottomTab } from "@/hooks/useShowBottomTab";
+import { BarChart } from "react-native-gifted-charts";
+import BottomSheetModalContainer from "@/components/sheets/BottomSheetModalContainer";
+
 import ButtonContainer from "@/components/button/ButtonContainer";
+import FilterList from "@/components/FilterList";
+
+const types_data = [
+  {
+    name: "Global",
+    id: "global",
+  },
+  {
+    name: "Par pièce",
+    id: "realized",
+  },
+  {
+    name: "Par appareil",
+    id: "in_progress",
+  },
+];
+
+const date_picker_mode_data = [
+  {
+    name: "Jour",
+    id: "single",
+  },
+  {
+    name: "Période",
+    id: "range",
+  },
+  {
+    name: "Mois",
+    id: "month",
+  },
+  {
+    name: "Année",
+    id: "year",
+  },
+];
+
+interface BottomSheetModalRef {
+  toggleShowBottomSheet: () => void;
+}
 
 export default function ChartsScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -41,32 +84,127 @@ export default function ChartsScreen() {
 
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<DateType>(today);
+  const [selectedStartDate, setSelectedStartDate] = useState<DateType>();
+  const [selectedEndDate, setSelectedEndDate] = useState<DateType>();
+
+  const [appliedDate, setAppliedDate] = useState<DateType>(today);
+  const [appliedStartDate, setAppliedStartDate] = useState<DateType>(today);
+  const [appliedEndDate, setAppliedEndDate] = useState<DateType>(today);
 
   const [bottomSheetShown, setBottomSheetShown] = useState(false);
 
-  const date_picker_sheet = useRef<BottomSheet>(null);
+  const date_picker_sheet = useRef<BottomSheetModalRef>(null);
+
+  const { showBottomTab, setShowBottomTab } = useShowBottomTab();
+
+  const [selectedType, setSelectedType] = useState<string>("global");
+  const [selectedMode, setSelectedMode] = useState<string>("single");
+
+  const chart_width = Dimensions.get("window").width - 30 - 30;
+
+  const bar_sample_data = [
+    { value: 98, label: "L" },
+    // { value: 500, label: "T", frontColor: "#177AD5" },
+    { value: 94, label: "M" },
+    { value: 95, label: "M" },
+    { value: 89, label: "J" },
+    { value: 101, label: "V" },
+    { value: 100, label: "S" },
+    { value: 92, label: "D" },
+  ];
+
+  const handleApplyType = (type: string) => {
+    setSelectedType(type);
+  };
 
   const getDateText = () => {
     let text = "";
-    if (moment(selectedDate).isSame(today, "day")) {
-      text += "Ajourd'hui, ";
-    } else if (
-      moment(selectedDate).isSame(moment(today).subtract(1, "day"), "day")
-    ) {
-      text += "Hier, ";
-    } else if (
-      moment(selectedDate).isSame(moment(today).subtract(2, "day"), "day")
-    ) {
-      text += "Avant-hier, ";
-    }
 
-    if (moment(selectedDate).isSame(today, "year")) {
-      text += moment(selectedDate).format("D MMMM");
-    } else {
-      text += moment(selectedDate).format("D MMMM YYYY");
+    switch (selectedMode) {
+      case "single":
+        if (moment(appliedDate).isSame(today, "day")) {
+          text += "Ajourd'hui, ";
+        } else if (
+          moment(appliedDate).isSame(moment(today).subtract(1, "day"), "day")
+        ) {
+          text += "Hier, ";
+        } else if (
+          moment(appliedDate).isSame(moment(today).subtract(2, "day"), "day")
+        ) {
+          text += "Avant-hier, ";
+        }
+
+        if (moment(appliedDate).isSame(today, "year")) {
+          text += moment(appliedDate).format("D MMMM");
+        } else {
+          text += moment(appliedDate).format("D MMMM YYYY");
+        }
+        break;
+      case "range":
+        text += "Du ";
+
+        if (moment(appliedStartDate).isSame(today, "year")) {
+          text += moment(appliedStartDate).format("D MMMM");
+        } else {
+          text += moment(appliedStartDate).format("D MMMM YYYY");
+        }
+
+        text += " au ";
+
+        if (moment(appliedEndDate).isSame(today, "year")) {
+          text += moment(appliedEndDate).format("D MMMM");
+        } else {
+          text += moment(appliedEndDate).format("D MMMM YYYY");
+        }
+        break;
+      default:
+        break;
     }
 
     return text;
+  };
+
+  const handleSelectDate = (date_data: object) => {
+    if (selectedMode == "range") {
+      const { startDate, endDate } = date_data;
+      setSelectedStartDate(startDate);
+      setSelectedEndDate(endDate);
+    } else {
+      const { date } = date_data;
+      setSelectedDate(date);
+    }
+  };
+
+  const handleConfirmDate = () => {
+    setAppliedDate(selectedDate);
+    setAppliedStartDate(selectedStartDate);
+    setAppliedEndDate(selectedEndDate);
+    date_picker_sheet.current?.toggleShowBottomSheet();
+  };
+
+  const handleApplyMode = (mode: string) => {
+    setSelectedMode(mode);
+  };
+
+  const month_selector_styles = () => {
+    if (selectedMode == "month") {
+      return {
+        day: { display: "none" },
+        days: { display: "none" },
+        // header: { display: "none" },
+        weekday: { display: "none" },
+        weekdays: { display: "none" },
+        months: { marginTop: -100 },
+      };
+    }
+    return {};
+  };
+
+  const year_selector_styles = () => {
+    if (selectedMode == "year") {
+      return {};
+    }
+    return {};
   };
 
   const headerAnimatedStyles = useAnimatedStyle(() => {
@@ -94,76 +232,152 @@ export default function ChartsScreen() {
     setHeaderHeight(height);
   };
 
-  const toggleShowBottomSheet = () => {
-    if (bottomSheetShown) {
-      date_picker_sheet.current?.close();
-    } else date_picker_sheet.current?.collapse();
-  };
-
   return (
     <>
-      <TouchableWithoutFeedback
-        onPress={() => date_picker_sheet.current?.close()}
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.bg,
+            paddingTop: insets.top,
+          },
+        ]}
       >
-        <View
+        <Animated.View
           style={[
-            styles.container,
-            {
-              backgroundColor: theme.bg,
-              paddingTop: insets.top,
-            },
+            styles.header,
+            headerAnimatedStyles,
+            { top: insets.top, backgroundColor: theme.bg },
           ]}
+          onLayout={handleLayout}
         >
-          <Animated.View
-            style={[
-              styles.header,
-              headerAnimatedStyles,
-              { top: insets.top, backgroundColor: theme.bg },
-            ]}
-            onLayout={handleLayout}
+          <Text style={[styles.header_title, { color: theme.dark_text }]}>
+            Statistiques
+          </Text>
+        </Animated.View>
+        <Animated.ScrollView
+          style={[styles.main, { paddingTop: headerHeight }]}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+        >
+          <TouchableOpacity
+            onPress={() => date_picker_sheet.current?.toggleShowBottomSheet()}
+            style={styles.main_date}
           >
-            <Text style={[styles.header_title, { color: theme.dark_text }]}>
-              Statistiques
+            <Text style={[styles.main_date_text, { color: theme.dark_text }]}>
+              {getDateText()}
             </Text>
-          </Animated.View>
-          <Animated.ScrollView
-            style={[styles.main, { paddingTop: headerHeight }]}
+            <ChevronDown color={theme.dark_text} />
+          </TouchableOpacity>
+
+          <FilterList
+            filters={types_data}
+            handleApplyFilter={handleApplyType}
+            default_filter="global"
+          />
+
+          <View
+            style={[
+              styles.main_chart,
+              { backgroundColor: theme.light_bg, borderColor: theme.stroke },
+            ]}
           >
-            <TouchableOpacity
-              onPress={toggleShowBottomSheet}
-              style={styles.main_date}
-            >
-              <Text style={[styles.main_date_text, { color: theme.dark_text }]}>
-                {getDateText()}
-              </Text>
-              <ChevronDown color={theme.dark_text} />
-            </TouchableOpacity>
-          </Animated.ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
-      <BottomSheet
-        index={-1}
-        enablePanDownToClose
-        snapPoints={["50%", "65%"]}
+            <BarChart
+              data={bar_sample_data}
+              frontColor={theme.tint}
+              yAxisThickness={0}
+              xAxisThickness={0}
+              barBorderRadius={4}
+              barWidth={20}
+              // height={chart_width / 2.2}
+              // 40 = estimated yAxisValues width + charts padding ; 20 = barWidth
+              spacing={(chart_width - 50) / bar_sample_data.length - 20}
+              yAxisLabelWidth={40}
+              yAxisTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              xAxisLabelTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              disablePress
+              noOfSections={3}
+              disableScroll
+              initialSpacing={10}
+              endSpacing={5}
+              yAxisLabelSuffix="L"
+            />
+          </View>
+        </Animated.ScrollView>
+      </View>
+
+      <BottomSheetModalContainer
+        title={"Date"}
+        snap_points={["50%", "75%"]}
         ref={date_picker_sheet}
-        // handleComponent={() => <></>}
+        onAnimate={(actual_index, next_index) => {
+          // index == -1 => close
+          // index == 0 => first snap point in the array
+          if (next_index == -1) {
+            setShowBottomTab(true);
+          } else {
+            setShowBottomTab(false);
+          }
+        }}
+        footer_dependencies={[selectedDate, selectedStartDate, selectedEndDate]}
+        footer={
+          <ButtonContainer action={() => handleConfirmDate()}>
+            <View
+              style={[
+                styles.bottom_sheet_footer,
+                { backgroundColor: theme.tint, borderColor: theme.stroke },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.bottom_sheet_footer_text,
+                  { color: theme.light_text },
+                ]}
+              >
+                Valider
+              </Text>
+            </View>
+          </ButtonContainer>
+        }
       >
         <BottomSheetView
           style={[styles.bottom_sheet, { backgroundColor: theme.light_bg }]}
         >
+          <FilterList
+            filters={date_picker_mode_data}
+            handleApplyFilter={handleApplyMode}
+            default_filter={selectedMode}
+          />
           <DateTimePicker
-            mode="single"
+            mode={selectedMode == "range" ? "range" : "single"}
+            // mode="range"
             date={selectedDate}
-            onChange={({ date }) => setSelectedDate(date)}
+            onChange={(date: object) => handleSelectDate(date)}
+            startDate={selectedStartDate}
+            endDate={selectedEndDate}
             styles={{
               ...defaultStyles,
-              today: { borderColor: "blue", borderWidth: 1 }, // Add a border to today's date
-              selected: { backgroundColor: "blue" }, // Highlight the selected day
-              selected_label: { color: "white" }, // Highlight the selected day label
+              today: { ...styles.date_picker_today, borderColor: theme.tint }, // Add a border to today's date
+              selected: {
+                ...styles.date_picker_selected,
+                backgroundColor: theme.tint,
+              }, // Highlight the selected day
+              selected_label: {
+                ...styles.date_selected_label,
+                color: theme.light_text,
+              }, // Highlight the selected day label
               month_label: styles.date_picker_text,
               month_selector_label: styles.date_picker_title,
               year_selector_label: styles.date_picker_title,
               day_label: styles.date_picker_text,
+              ...month_selector_styles(),
+              ...year_selector_styles(),
             }}
             firstDayOfWeek={1}
             locale="fr"
@@ -174,7 +388,7 @@ export default function ChartsScreen() {
             maxDate={today}
           />
         </BottomSheetView>
-      </BottomSheet>
+      </BottomSheetModalContainer>
     </>
   );
 }
@@ -182,7 +396,6 @@ export default function ChartsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 15,
   },
 
   header: {
@@ -202,11 +415,13 @@ const styles = StyleSheet.create({
   main: {
     width: "100%",
     marginTop: 15,
+    paddingHorizontal: 15,
   },
   main_date: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+    marginBottom: 10,
   },
   main_date_text: {
     fontFamily: "Figtree-SemiBold",
@@ -218,6 +433,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
 
+  bottom_sheet_footer: {
+    alignSelf: "center",
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 2,
+  },
+  bottom_sheet_footer_text: {
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 18,
+    // letterSpacing: -0.4,
+  },
+
+  date_picker_today: {
+    borderWidth: 2,
+  },
+  date_picker_selected: {},
+  date_selected_label: {},
   date_picker_title: {
     textTransform: "capitalize",
     fontFamily: "Figtree-SemiBold",
@@ -227,5 +460,17 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
     paddingHorizontal: 2,
     fontFamily: "Figtree-Medium",
+  },
+
+  main_chart: {
+    borderRadius: 15,
+    borderWidth: 2,
+    paddingTop: 20,
+    padding: 15,
+    marginTop: 10,
+  },
+  main_chart_text: {
+    fontFamily: "Figtree-Regular",
+    fontSize: 14,
   },
 });

@@ -3,27 +3,23 @@ import { useState } from "react";
 import FilterListItem from "./FilterListItem";
 import { Dimensions, ScrollView, StyleSheet } from "react-native";
 
-interface FilterListProps {
-  handleApplyFilter: (filter: string) => void;
+interface FilterProps {
+  name: string;
+  id: string;
 }
 
-export default function FilterList({ handleApplyFilter }: FilterListProps) {
-  const filters_data = [
-    {
-      name: "Tous",
-      id: "all",
-    },
-    {
-      name: "Réalisés",
-      id: "realized",
-    },
-    {
-      name: "En cours",
-      id: "in_progress",
-    },
-  ] as const;
+interface FilterListProps {
+  handleApplyFilter: (filter: string) => void;
+  filters: Array<FilterProps>;
+  default_filter: string;
+}
 
-  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+export default function FilterList({
+  handleApplyFilter,
+  filters,
+  default_filter,
+}: FilterListProps) {
+  const [selectedFilter, setSelectedFilter] = useState<string>(default_filter);
 
   return (
     <ScrollView
@@ -31,7 +27,7 @@ export default function FilterList({ handleApplyFilter }: FilterListProps) {
       contentContainerStyle={{ gap: 8 }}
       style={styles.list}
     >
-      {filters_data.map((filter, index) => {
+      {filters.map((filter, index) => {
         const { id } = filter;
 
         const handleSelectFilter = () => {

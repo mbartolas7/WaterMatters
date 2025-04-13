@@ -146,6 +146,7 @@ export default function HomeScreen() {
           </Link>
         </View>
       </Animated.View>
+
       {headerHeight !== 0 && (
         <Animated.FlatList
           // Vertical gap

@@ -5,7 +5,14 @@ import {
   useBottomSheetModal,
 } from "@gorhom/bottom-sheet";
 
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import React, {
   forwardRef,
   ReactElement,
@@ -26,6 +33,7 @@ interface BottomSheetModalContainerProps {
   footer_dependencies?: any;
   snap_points: Array<string>;
   title: string;
+  input_ref?: React.RefObject<TextInput>;
   onAnimate: (actual_index: number, next_index: number) => void;
 }
 
@@ -38,6 +46,7 @@ const BottomSheetModalContainer = forwardRef(
       snap_points,
       title,
       onAnimate,
+      input_ref,
       ...restProps
     }: BottomSheetModalContainerProps,
     ref: any
@@ -78,12 +87,16 @@ const BottomSheetModalContainer = forwardRef(
 
     const header = () => (
       // Header of the bottom sheet
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <TouchableOpacity style={styles.close} onPress={() => dismiss()}>
-          <X color={theme.dark_text} />
-        </TouchableOpacity>
-      </View>
+      <TouchableWithoutFeedback
+        onPress={() => (input_ref ? input_ref.current?.blur() : null)}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>{title}</Text>
+          <TouchableOpacity style={styles.close} onPress={() => dismiss()}>
+            <X color={theme.dark_text} />
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
     );
 
     const renderBackdrop = useCallback(
@@ -101,25 +114,29 @@ const BottomSheetModalContainer = forwardRef(
 
     const renderFooter = useCallback(
       (props: any) => (
-        <BottomSheetFooter
-          {...props}
-          style={[styles.footer_container]}
-          bottomInset={0}
+        <TouchableWithoutFeedback
+          onPress={() => (input_ref ? input_ref.current?.blur() : null)}
         >
-          <LinearGradient
-            //   "rgba(255,255,255,0)"
-            colors={["rgba(255,255,255,0)", "white"]}
-            // style={styles.card_gradient}
-            style={[
-              styles.footer_container_gradient,
-              { paddingBottom: insets.bottom },
-            ]}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 0.3 }}
+          <BottomSheetFooter
+            {...props}
+            style={[styles.footer_container]}
+            bottomInset={0}
           >
-            {footer}
-          </LinearGradient>
-        </BottomSheetFooter>
+            <LinearGradient
+              //   "rgba(255,255,255,0)"
+              colors={["rgba(255,255,255,0)", "white"]}
+              // style={styles.card_gradient}
+              style={[
+                styles.footer_container_gradient,
+                { paddingBottom: insets.bottom },
+              ]}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 0.3 }}
+            >
+              {footer}
+            </LinearGradient>
+          </BottomSheetFooter>
+        </TouchableWithoutFeedback>
       ),
       // Dependencies in order to rerender the footer on change
       footer_dependencies
@@ -154,6 +171,7 @@ export default BottomSheetModalContainer;
 const styles = StyleSheet.create({
   header: {
     justifyContent: "center",
+    alignItems: "center",
     position: "relative",
     marginBottom: 12,
     marginTop: 16,
@@ -161,16 +179,14 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "center",
-    fontFamily: "DMSans-Regular",
+    fontFamily: "Figtree-Bold",
     fontSize: 20,
-    fontStyle: "normal",
-    fontWeight: "500",
-    lineHeight: 32,
-    letterSpacing: -0.2,
+    letterSpacing: -0.4,
   },
   close: {
     position: "absolute",
     right: 0,
+    bottom: -2,
   },
 
   footer_container: {

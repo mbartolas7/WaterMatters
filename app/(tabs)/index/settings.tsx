@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useRouter } from "expo-router";
+import { Link, RelativePathString, useRouter } from "expo-router";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
@@ -14,6 +14,26 @@ import ButtonContainer from "@/components/button/ButtonContainer";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
 
+interface SettingProps {
+  title: string;
+  description: string;
+  route_name: RelativePathString;
+}
+
+const settings = [
+  {
+    title: "Système",
+    description:
+      "Éditez vos différents capteurs et la pièce associée de votre maison",
+    route_name: "system" as RelativePathString,
+  },
+  {
+    title: "Notifications",
+    description: "Choisissez comment vous désirez être notifié ",
+    route_name: "notifications" as RelativePathString,
+  },
+];
+
 export default function SettingsScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -24,19 +44,26 @@ export default function SettingsScreen() {
 
   const router = useRouter();
 
-  const settings = [
-    {
-      title: "Système",
-      description:
-        "Éditez vos différents capteurs et la pièce associée de votre maison",
-      route_name: "system",
-    },
-    {
-      title: "Notifications",
-      description: "Choisissez comment vous désirez être notifié ",
-      route_name: "notifications",
-    },
-  ];
+  const settingsListItem = (item: SettingProps, index: number) => {
+    const { title, description, route_name } = item;
+    return (
+      <ButtonContainer key={index} action={() => router.navigate(route_name)}>
+        <View style={styles.list_item}>
+          <Text style={[styles.list_item_title, { color: theme.dark_text }]}>
+            {title}
+          </Text>
+          <Text
+            style={[
+              styles.list_item_description,
+              { color: theme.secondary_text },
+            ]}
+          >
+            {description}
+          </Text>
+        </View>
+      </ButtonContainer>
+    );
+  };
 
   const headerAnimatedStyles = useAnimatedStyle(() => {
     return {
@@ -93,31 +120,7 @@ export default function SettingsScreen() {
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
-          {settings.map((item, index) => {
-            const { title, description, route_name } = item;
-            return (
-              <ButtonContainer
-                key={index}
-                action={() => router.navigate(route_name)}
-              >
-                <View style={styles.list_item}>
-                  <Text
-                    style={[styles.list_item_title, { color: theme.dark_text }]}
-                  >
-                    {title}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.list_item_description,
-                      { color: theme.secondary_text },
-                    ]}
-                  >
-                    {description}
-                  </Text>
-                </View>
-              </ButtonContainer>
-            );
-          })}
+          {settings.map(settingsListItem)}
         </Animated.ScrollView>
       )}
     </View>

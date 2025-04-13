@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   StyleSheet,
@@ -33,6 +33,7 @@ import BottomSheetModalContainer from "@/components/sheets/BottomSheetModalConta
 
 import ButtonContainer from "@/components/button/ButtonContainer";
 import FilterList from "@/components/FilterList";
+import getChartData from "@/lib/getChartData";
 
 const types_data = [
   {
@@ -41,11 +42,11 @@ const types_data = [
   },
   {
     name: "Par pièce",
-    id: "realized",
+    id: "room",
   },
   {
     name: "Par appareil",
-    id: "in_progress",
+    id: "device",
   },
 ];
 
@@ -66,6 +67,25 @@ const date_picker_mode_data = [
     name: "Période",
     id: "range",
   },
+];
+
+const bar_sample_data = [
+  { value: 98, label: "L" },
+  // { value: 500, label: "T", frontColor: "#177AD5" },
+  { value: 94, label: "M" },
+  { value: 95, label: "M" },
+  { value: 89, label: "J" },
+  { value: 101, label: "V" },
+  { value: 100, label: "S" },
+  { value: 92, label: "D" },
+  { value: 92, label: "D" },
+  { value: 92, label: "D" },
+  { value: 92, label: "D" },
+  { value: 92, label: "D" },
+  { value: 92, label: "D" },
+  // { value: 92, label: "D" },
+  // { value: 92, label: "D" },
+  // { value: 92, label: "D" },
 ];
 
 interface BottomSheetModalRef {
@@ -101,18 +121,27 @@ export default function ChartsScreen() {
   const [selectedMode, setSelectedMode] = useState<string>("single");
   const [appliedMode, setAppliedMode] = useState<string>("single");
 
+  const [chartData, setChartData] = useState([]);
+
   const chart_width = Dimensions.get("window").width - 30 - 30;
 
-  const bar_sample_data = [
-    { value: 98, label: "L" },
-    // { value: 500, label: "T", frontColor: "#177AD5" },
-    { value: 94, label: "M" },
-    { value: 95, label: "M" },
-    { value: 89, label: "J" },
-    { value: 101, label: "V" },
-    { value: 100, label: "S" },
-    { value: 92, label: "D" },
-  ];
+  useEffect(() => {
+    getChartData({
+      type: selectedType,
+      start_date: appliedStartDate,
+      end_date: appliedEndDate,
+      date_mode: appliedMode,
+    }).then((res) => {
+      console.log(res);
+      setChartData(res);
+    });
+  }, [
+    appliedDate,
+    appliedMode,
+    selectedType,
+    appliedStartDate,
+    appliedEndDate,
+  ]);
 
   const handleApplyType = (type: string) => {
     setSelectedType(type);
@@ -178,7 +207,7 @@ export default function ChartsScreen() {
   const handleSelectDate = (date_data: object | number) => {
     if (selectedMode == "single" && typeof date_data == "object") {
       const { date } = date_data;
-      console.log(date);
+      // console.log(date);
       setSelectedDate(date);
     } else if (selectedMode == "range" && typeof date_data == "object") {
       const { startDate, endDate } = date_data;
@@ -195,7 +224,7 @@ export default function ChartsScreen() {
         setSelectedYear(date_data);
       }
     } else if (selectedMode == "year" && typeof date_data == "number") {
-      console.log(date_data);
+      // console.log(date_data);
       setSelectedYear(date_data);
     }
   };
@@ -204,6 +233,8 @@ export default function ChartsScreen() {
     switch (selectedMode) {
       case "single":
         setAppliedDate(selectedDate);
+        setAppliedStartDate(new Date(selectedDate.setHours(0, 0, 0, 0)));
+        setAppliedEndDate(new Date(selectedDate.setHours(23, 59, 59, 999)));
         break;
       case "range":
         setAppliedStartDate(selectedStartDate);
@@ -227,7 +258,6 @@ export default function ChartsScreen() {
   };
 
   const handleSelectMode = (mode: string) => {
-    console.log("selected mode : " + mode);
     setSelectedMode(mode);
   };
 
@@ -262,6 +292,62 @@ export default function ChartsScreen() {
       };
     }
     return {};
+  };
+
+  const chart = () => {
+    switch (selectedType) {
+      case "global":
+        {
+          const numberOfBars = chartData.length;
+
+          const idealBarWidth = numberOfBars > 10 ? 12 : 22;
+          const minSpacing = 5;
+
+          const totalBarsWidth = idealBarWidth * numberOfBars;
+          const remainingSpace = chart_width - totalBarsWidth;
+          const spacing =
+            numberOfBars > 10
+              ? Math.max(minSpacing, remainingSpace / (numberOfBars + 5))
+              : Math.max(minSpacing, remainingSpace / (numberOfBars + 1));
+
+          return (
+            <BarChart
+              // data={bar_sample_data}
+              data={chartData}
+              frontColor={theme.tint}
+              yAxisThickness={0}
+              xAxisThickness={0}
+              barBorderRadius={4}
+              // barWidth={20}
+              // barWidth={18}
+              barWidth={idealBarWidth}
+              // height={chart_width / 2.2}
+              // 40 = estimated yAxisValues width + charts padding ; 20 = barWidth
+              // spacing={(chart_width - 50) / bar_sample_data.length - 20}
+              // spacing={(chart_width - 50) / bar_sample_data.length - 16}
+              spacing={spacing}
+              yAxisLabelWidth={40}
+              yAxisTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              xAxisLabelTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              disablePress
+              noOfSections={3}
+              disableScroll
+              initialSpacing={10}
+              endSpacing={5}
+              yAxisLabelSuffix="L"
+            />
+          );
+        }
+        break;
+      default:
+        break;
+    }
   };
 
   const headerAnimatedStyles = useAnimatedStyle(() => {
@@ -347,32 +433,7 @@ export default function ChartsScreen() {
               { backgroundColor: theme.light_bg, borderColor: theme.stroke },
             ]}
           >
-            <BarChart
-              data={bar_sample_data}
-              frontColor={theme.tint}
-              yAxisThickness={0}
-              xAxisThickness={0}
-              barBorderRadius={4}
-              barWidth={20}
-              // height={chart_width / 2.2}
-              // 40 = estimated yAxisValues width + charts padding ; 20 = barWidth
-              spacing={(chart_width - 50) / bar_sample_data.length - 20}
-              yAxisLabelWidth={40}
-              yAxisTextStyle={[
-                styles.main_chart_text,
-                { color: theme.secondary_text },
-              ]}
-              xAxisLabelTextStyle={[
-                styles.main_chart_text,
-                { color: theme.secondary_text },
-              ]}
-              disablePress
-              noOfSections={3}
-              disableScroll
-              initialSpacing={10}
-              endSpacing={5}
-              yAxisLabelSuffix="L"
-            />
+            {chart()}
           </View>
         </Animated.ScrollView>
       </View>
@@ -523,6 +584,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderWidth: 2,
+    overflow: "hidden",
   },
   bottom_sheet_footer_text: {
     fontFamily: "Figtree-SemiBold",

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -34,6 +35,7 @@ import BottomSheetModalContainer from "@/components/sheets/BottomSheetModalConta
 import ButtonContainer from "@/components/button/ButtonContainer";
 import FilterList from "@/components/FilterList";
 import getChartData from "@/lib/getChartData";
+import HistoricListItem from "@/components/HistoricListItem";
 
 const types_data = [
   {
@@ -121,7 +123,7 @@ export default function ChartsScreen() {
   const [selectedMode, setSelectedMode] = useState<string>("single");
   const [appliedMode, setAppliedMode] = useState<string>("single");
 
-  const [chartData, setChartData] = useState([]);
+  const [data, setData] = useState([]);
 
   const chart_width = Dimensions.get("window").width - 30 - 30;
 
@@ -133,7 +135,7 @@ export default function ChartsScreen() {
       date_mode: appliedMode,
     }).then((res) => {
       console.log(res);
-      setChartData(res);
+      setData(res);
     });
   }, [
     appliedDate,
@@ -298,7 +300,7 @@ export default function ChartsScreen() {
     switch (selectedType) {
       case "global":
         {
-          const numberOfBars = chartData.length;
+          const numberOfBars = data.length;
 
           const idealBarWidth = numberOfBars > 10 ? 12 : 22;
           const minSpacing = 5;
@@ -310,44 +312,98 @@ export default function ChartsScreen() {
               ? Math.max(minSpacing, remainingSpace / (numberOfBars + 5))
               : Math.max(minSpacing, remainingSpace / (numberOfBars + 1));
 
-          return (
-            <BarChart
-              // data={bar_sample_data}
-              data={chartData}
-              frontColor={theme.tint}
-              yAxisThickness={0}
-              xAxisThickness={0}
-              barBorderRadius={4}
-              // barWidth={20}
-              // barWidth={18}
-              barWidth={idealBarWidth}
-              // height={chart_width / 2.2}
-              // 40 = estimated yAxisValues width + charts padding ; 20 = barWidth
-              // spacing={(chart_width - 50) / bar_sample_data.length - 20}
-              // spacing={(chart_width - 50) / bar_sample_data.length - 16}
-              spacing={spacing}
-              yAxisLabelWidth={40}
-              yAxisTextStyle={[
-                styles.main_chart_text,
-                { color: theme.secondary_text },
-              ]}
-              xAxisLabelTextStyle={[
-                styles.main_chart_text,
-                { color: theme.secondary_text },
-              ]}
-              disablePress
-              noOfSections={3}
-              disableScroll
-              initialSpacing={10}
-              endSpacing={5}
-              yAxisLabelSuffix="L"
-            />
-          );
+          if (appliedMode !== "single")
+            return (
+              <BarChart
+                // data={bar_sample_data}
+                data={data}
+                frontColor={theme.tint}
+                yAxisThickness={0}
+                xAxisThickness={0}
+                barBorderRadius={4}
+                barWidth={idealBarWidth}
+                spacing={spacing}
+                yAxisLabelWidth={40}
+                yAxisTextStyle={[
+                  styles.main_chart_text,
+                  { color: theme.secondary_text },
+                ]}
+                xAxisLabelTextStyle={[
+                  styles.main_chart_text,
+                  { color: theme.secondary_text },
+                ]}
+                disablePress
+                noOfSections={3}
+                disableScroll
+                initialSpacing={10}
+                endSpacing={5}
+                yAxisLabelSuffix="L"
+              />
+            );
+          return;
         }
         break;
       default:
         break;
     }
+  };
+
+  const historic = () => {
+    switch (selectedType) {
+      case "global": {
+        if (appliedMode == "single")
+          if (data.length !== 0)
+            return (
+              <FlatList
+                data={data}
+                renderItem={HistoricListItem}
+                scrollEnabled={false}
+                style={styles.main_historic_list}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={[
+                      styles.main_historic_list_separator,
+                      { backgroundColor: theme.stroke },
+                    ]}
+                  />
+                )}
+              />
+            );
+        return;
+      }
+      default:
+        break;
+    }
+  };
+
+  const chartContainer = () => {
+    const child = chart();
+    if (child !== undefined)
+      return (
+        <View
+          style={[
+            styles.main_chart,
+            { backgroundColor: theme.light_bg, borderColor: theme.stroke },
+          ]}
+        >
+          {child}
+        </View>
+      );
+  };
+
+  const historicContainer = () => {
+    const child = historic();
+    if (child !== undefined)
+      return (
+        <View
+          style={[
+            styles.main_historic,
+            { backgroundColor: theme.light_bg, borderColor: theme.stroke },
+          ]}
+        >
+          {child}
+        </View>
+      );
   };
 
   const headerAnimatedStyles = useAnimatedStyle(() => {
@@ -427,14 +483,8 @@ export default function ChartsScreen() {
             default_filter="global"
           />
 
-          <View
-            style={[
-              styles.main_chart,
-              { backgroundColor: theme.light_bg, borderColor: theme.stroke },
-            ]}
-          >
-            {chart()}
-          </View>
+          {chartContainer()}
+          {historicContainer()}
         </Animated.ScrollView>
       </View>
 
@@ -628,5 +678,20 @@ const styles = StyleSheet.create({
   main_chart_text: {
     fontFamily: "Figtree-Regular",
     fontSize: 14,
+  },
+
+  main_historic: {
+    padding: 15,
+    borderRadius: 15,
+    borderWidth: 2,
+    marginTop: 10,
+  },
+  main_historic_list: {
+    flex: 1,
+  },
+  main_historic_list_separator: {
+    height: 1,
+    width: "100%",
+    marginVertical: 8,
   },
 });

@@ -1,6 +1,8 @@
 import { DateType } from "react-native-ui-datepicker";
 
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import moment from "moment";
 
 const usesCollection = firestore().collection("uses");
@@ -13,7 +15,7 @@ interface GetChartDataProps {
 }
 
 interface UseProps {
-  begin_tp: Date;
+  begin_tp: FirebaseFirestoreTypes.Timestamp | Date;
   end_tp: Date;
   duration: number;
   id: number;
@@ -29,13 +31,23 @@ const getChartData = async ({
   date_mode,
 }: GetChartDataProps) => {
   let data = [] as UseProps[];
+
   await usesCollection
     .where("begin_tp", ">=", start_date)
     .where("begin_tp", "<=", end_date)
     .get()
     .then((querySnapshot) => {
       querySnapshot.forEach((documentSnapshot) => {
-        data.push({ ...documentSnapshot.data(), key: documentSnapshot.id });
+        let doc_data = documentSnapshot.data() as Omit<UseProps, "key">;
+        const { begin_tp, end_tp } = doc_data;
+        doc_data.begin_tp = new Date(
+          begin_tp.seconds * 1000 + begin_tp.nanoseconds / 1_000_000
+        );
+        doc_data.end_tp = new Date(
+          end_tp.seconds * 1000 + end_tp.nanoseconds / 1_000_000
+        );
+
+        data.push({ ...doc_data, key: documentSnapshot.id });
       });
 
       console.log(data);
@@ -45,25 +57,15 @@ const getChartData = async ({
 
   if (date_mode == "single") return data;
 
-  //   console.log(start_date);
-  //   console.log(end_date);
-
   const start = moment(start_date).startOf(
     date_mode == "month" ? "isoWeek" : "month"
   );
   const end = moment(end_date).endOf(
     date_mode == "month" ? "isoWeek" : "month"
   );
-  //   const start = moment(start_date).startOf("isoWeek");
-  //   const end = moment(end_date).endOf("isoWeek");
   const tempDate = start.clone();
 
-  //   console.log(start.format("[S]WW"));
-  //   console.log(end.format("[S]WW"));
-
   while (tempDate.isSameOrBefore(end)) {
-    // console.log(moment(tempDate).format("DD MM YY"));
-    // console.log(tempDate.format("YYYY-[S]WW"));
     let key = "";
     switch (date_mode) {
       case "month":
@@ -82,17 +84,12 @@ const getChartData = async ({
     aggregationMap[key] = 0;
   }
 
-  //   console.log(aggregationMap);
-
   data.forEach((item) => {
-    // console.log(moment(item.begin_tp).format("DD MM YY"));
     const item_date = moment(item.begin_tp);
     let key = "";
 
     switch (date_mode) {
       case "month":
-        // console.log(item_date.format("DD MM YY"));
-        // console.log(item_date.format("YYYY-[S]WW"));
         key = item_date.format("YYYY-[S]WW"); // Année ISO + numéro de semaine ISO
         break;
       case "year":
@@ -108,9 +105,7 @@ const getChartData = async ({
     aggregationMap[key] += item.volume;
   });
 
-  //   console.log(aggregationMap);
-
-  // Optionnel : transformer en tableau trié
+  // Formatter les labels
   const result = Object.entries(aggregationMap).map(([label, value]) => {
     const formattedLabel = () => {
       switch (date_mode) {
@@ -119,6 +114,7 @@ const getChartData = async ({
           break;
         case "year":
           return moment(label, "YYYY-MM").format("MMM")[0].toUpperCase();
+          break;
         default:
           break;
       }

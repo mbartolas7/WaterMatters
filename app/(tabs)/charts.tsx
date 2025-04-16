@@ -36,6 +36,10 @@ import ButtonContainer from "@/components/button/ButtonContainer";
 import FilterList from "@/components/FilterList";
 import getChartData from "@/lib/getChartData";
 import HistoricListItem from "@/components/HistoricListItem";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import { useSelector } from "react-redux";
+import { getSensors } from "@/redux/slices/sensorsSlice";
+import RoomConsumptionListItem from "@/components/RoomConsumptionListItem";
 
 const types_data = [
   {
@@ -71,27 +75,25 @@ const date_picker_mode_data = [
   },
 ];
 
-const bar_sample_data = [
-  { value: 98, label: "L" },
-  // { value: 500, label: "T", frontColor: "#177AD5" },
-  { value: 94, label: "M" },
-  { value: 95, label: "M" },
-  { value: 89, label: "J" },
-  { value: 101, label: "V" },
-  { value: 100, label: "S" },
-  { value: 92, label: "D" },
-  { value: 92, label: "D" },
-  { value: 92, label: "D" },
-  { value: 92, label: "D" },
-  { value: 92, label: "D" },
-  { value: 92, label: "D" },
-  // { value: 92, label: "D" },
-  // { value: 92, label: "D" },
-  // { value: 92, label: "D" },
-];
-
 interface BottomSheetModalRef {
   toggleShowBottomSheet: () => void;
+}
+
+interface UseProps {
+  begin_tp: FirebaseFirestoreTypes.Timestamp | Date;
+  end_tp: FirebaseFirestoreTypes.Timestamp | Date;
+  duration: number;
+  id: number;
+  running: boolean;
+  volume: number;
+  key: string;
+}
+
+interface SensorProps {
+  name: string;
+  room: string;
+  id: number;
+  key: string;
 }
 
 export default function ChartsScreen() {
@@ -123,7 +125,11 @@ export default function ChartsScreen() {
   const [selectedMode, setSelectedMode] = useState<string>("single");
   const [appliedMode, setAppliedMode] = useState<string>("single");
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<
+    UseProps[] | { label: string | undefined; value: number }[]
+  >([]);
+
+  const sensors = useSelector(getSensors);
 
   const chart_width = Dimensions.get("window").width - 30 - 30;
 
@@ -133,6 +139,7 @@ export default function ChartsScreen() {
       start_date: appliedStartDate,
       end_date: appliedEndDate,
       date_mode: appliedMode,
+      sensors: sensors,
     }).then((res) => {
       console.log(res);
       setData(res);
@@ -143,6 +150,7 @@ export default function ChartsScreen() {
     selectedType,
     appliedStartDate,
     appliedEndDate,
+    sensors,
   ]);
 
   const handleApplyType = (type: string) => {
@@ -343,6 +351,26 @@ export default function ChartsScreen() {
           return;
         }
         break;
+      case "room": {
+        return (
+          <FlatList
+            data={data}
+            renderItem={({ item, index }) => (
+              <RoomConsumptionListItem item={item} index={index} />
+            )}
+            scrollEnabled={false}
+            ItemSeparatorComponent={
+              <View
+                style={[
+                  styles.list_separator,
+                  { backgroundColor: theme.stroke },
+                ]}
+              />
+            }
+          />
+        );
+        break;
+      }
       default:
         break;
     }
@@ -356,13 +384,23 @@ export default function ChartsScreen() {
             return (
               <FlatList
                 data={data}
-                renderItem={HistoricListItem}
+                renderItem={({ item, index }) => (
+                  <HistoricListItem
+                    item={item}
+                    index={index}
+                    sensor={
+                      sensors.filter(
+                        (item: SensorProps) => item.id == item.id
+                      )[0]
+                    }
+                  />
+                )}
                 scrollEnabled={false}
                 style={styles.main_historic_list}
                 ItemSeparatorComponent={() => (
                   <View
                     style={[
-                      styles.main_historic_list_separator,
+                      styles.list_separator,
                       { backgroundColor: theme.stroke },
                     ]}
                   />
@@ -689,9 +727,10 @@ const styles = StyleSheet.create({
   main_historic_list: {
     flex: 1,
   },
-  main_historic_list_separator: {
+
+  list_separator: {
     height: 1,
     width: "100%",
-    marginVertical: 8,
+    marginVertical: 10,
   },
 });

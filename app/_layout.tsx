@@ -14,8 +14,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 import { ShowBottomTabProvider } from "@/contexts/ShowBottomTabContext";
-import { useShowBottomTab } from "@/hooks/useShowBottomTab";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+
+import { store } from "@/redux/store";
+import { Provider } from "react-redux";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,14 +33,10 @@ export default function RootLayout() {
     "Figtree-extrabold": require("../assets/fonts/Figtree-ExtraBold.ttf"),
   });
 
-  const { setShowBottomTab } = useShowBottomTab();
-
   useEffect(() => {
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
-
-    // setShowBottomTab(true)
   }, [loaded, error]);
 
   if (!loaded && !error) {
@@ -48,22 +46,24 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <BottomSheetModalProvider>
-          <ShowBottomTabProvider>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-              <Stack.Screen
-                name="modal"
-                options={{
-                  presentation: "modal",
-                  headerShown: false,
-                }}
-              />
-            </Stack>
-            <StatusBar style="auto" />
-          </ShowBottomTabProvider>
-        </BottomSheetModalProvider>
+        <Provider store={store}>
+          <BottomSheetModalProvider>
+            <ShowBottomTabProvider>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+                <Stack.Screen
+                  name="modal"
+                  options={{
+                    presentation: "modal",
+                    headerShown: false,
+                  }}
+                />
+              </Stack>
+              <StatusBar style="auto" />
+            </ShowBottomTabProvider>
+          </BottomSheetModalProvider>
+        </Provider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

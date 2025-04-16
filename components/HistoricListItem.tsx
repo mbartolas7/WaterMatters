@@ -1,25 +1,50 @@
 import { Text, View, StyleSheet } from "react-native";
 import moment from "moment";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import { useThemeColor } from "@/hooks/useThemeColor";
+
+interface SensorProps {
+  name: string;
+  room: string;
+  id: number;
+  key: string;
+}
 
 interface HistoricProps {
   item: {
     id: number;
-    begin_tp: Date;
-    end_tp: Date;
+    begin_tp: FirebaseFirestoreTypes.Timestamp | Date;
+    end_tp: FirebaseFirestoreTypes.Timestamp | Date;
     running: boolean;
     volume: number;
     duration: number;
   };
   index: number;
+  sensor: SensorProps;
 }
 
-export default function HistoricListItem({ item, index }: HistoricProps) {
-  const { id, begin_tp, end_tp, volume } = item;
+export default function HistoricListItem({
+  item,
+  index,
+  sensor,
+}: HistoricProps) {
+  const { id, begin_tp, end_tp, volume, duration } = item;
+  const { name, room } = sensor;
+
+  const theme = useThemeColor();
+
   return (
     <View style={styles.item}>
-      <Text style={styles.item_title}>{id}</Text>
-      <Text style={styles.item_date}>
-        {moment(begin_tp).format("DD/MM/YY")}
+      <View style={styles.item_text}>
+        <Text style={[styles.item_text_title, { color: theme.dark_text }]}>
+          {name}
+        </Text>
+        <Text style={[styles.item_text_info, { color: theme.secondary_text }]}>
+          {room} • {volume}L • {duration}min
+        </Text>
+      </View>
+      <Text style={[styles.item_date, { color: theme.dark_text }]}>
+        {moment(begin_tp).format("h:mm")}
       </Text>
     </View>
   );
@@ -32,6 +57,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  item_title: {},
-  item_date: {},
+  item_text: {
+    gap: 5,
+  },
+  item_text_title: {
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 18,
+  },
+  item_text_info: {
+    fontFamily: "Figtree-Medium",
+    fontSize: 16,
+    lineHeight: 18,
+    letterSpacing: -0.4,
+  },
+  item_date: {
+    fontFamily: "Figtree-Medium",
+    fontSize: 16,
+  },
 });

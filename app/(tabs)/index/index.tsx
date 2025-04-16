@@ -1,14 +1,14 @@
+import { useEffect, useState } from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { Cog, PencilLine } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Link, router, useNavigation } from "expo-router";
+import { Link, router } from "expo-router";
 import WidgetListItem from "@/components/WidgetListItem";
 import ButtonContainer from "@/components/button/ButtonContainer";
 
 import firestore from "@react-native-firebase/firestore";
-import { useEffect, useState } from "react";
 
 import Animated, {
   useAnimatedScrollHandler,
@@ -17,8 +17,17 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
+import { useDispatch } from "react-redux";
+import { setSensors } from "@/redux/slices/sensorsSlice";
 
-const usesCollection = firestore().collection("uses");
+interface SensorProps {
+  name: string;
+  room: string;
+  id: number;
+  key: string;
+}
+
+const sensorsCollection = firestore().collection("sensors");
 
 export default function HomeScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -28,17 +37,22 @@ export default function HomeScreen() {
 
   const scrollY = useSharedValue(0);
 
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    getData();
+    getSensorsData();
   }, []);
 
-  const getData = async () => {
-    // const users = await usesCollection.get().then((querySnapshot) => {
-    //   console.log("Total uses: ", querySnapshot.size);
-    //   querySnapshot.forEach((documentSnapshot) => {
-    //     console.log("use ID: ", documentSnapshot.id, documentSnapshot.data());
-    //   });
-    // });
+  const getSensorsData = async () => {
+    await sensorsCollection.get().then((querySnapshot) => {
+      const data = [] as SensorProps[];
+      querySnapshot.forEach((documentSnapshot) => {
+        const sensor = documentSnapshot.data() as Omit<SensorProps, "key">;
+        data.push({ ...sensor, key: documentSnapshot.id });
+      });
+
+      dispatch(setSensors(data));
+    });
   };
 
   const widgets = [

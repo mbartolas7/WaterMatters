@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   StyleSheet,
@@ -125,6 +126,8 @@ export default function ChartsScreen() {
   const [selectedMode, setSelectedMode] = useState<string>("single");
   const [appliedMode, setAppliedMode] = useState<string>("single");
 
+  const [loading, setLoading] = useState<boolean>(true);
+
   const [data, setData] = useState<
     UseProps[] | { label: string | undefined; value: number }[]
   >([]);
@@ -134,6 +137,7 @@ export default function ChartsScreen() {
   const chart_width = Dimensions.get("window").width - 30 - 30;
 
   useEffect(() => {
+    setLoading(true);
     getChartData({
       type: selectedType,
       start_date: appliedStartDate,
@@ -143,6 +147,7 @@ export default function ChartsScreen() {
     }).then((res) => {
       console.log(res);
       setData(res);
+      setLoading(false);
     });
   }, [
     appliedDate,
@@ -521,8 +526,14 @@ export default function ChartsScreen() {
             default_filter="global"
           />
 
-          {chartContainer()}
-          {historicContainer()}
+          {loading ? (
+            <ActivityIndicator />
+          ) : (
+            <>
+              {chartContainer()}
+              {historicContainer()}
+            </>
+          )}
         </Animated.ScrollView>
       </View>
 

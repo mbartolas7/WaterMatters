@@ -41,6 +41,7 @@ import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useSelector } from "react-redux";
 import { getSensors } from "@/redux/slices/sensorsSlice";
 import RoomConsumptionListItem from "@/components/RoomConsumptionListItem";
+import DeviceConsumptionListItem from "@/components/DeviceConsumptionListItem";
 
 const types_data = [
   {
@@ -97,6 +98,11 @@ interface SensorProps {
   key: string;
 }
 
+interface ConsumptionDataProps {
+  data: UseProps[];
+  total_volume: number;
+}
+
 export default function ChartsScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -128,9 +134,10 @@ export default function ChartsScreen() {
 
   const [loading, setLoading] = useState<boolean>(true);
 
-  const [data, setData] = useState<
-    UseProps[] | { label: string | undefined; value: number }[]
-  >([]);
+  const [consumptionData, setConsumptionData] = useState<ConsumptionDataProps>({
+    data: [],
+    total_volume: 0,
+  });
 
   const sensors = useSelector(getSensors);
 
@@ -146,9 +153,21 @@ export default function ChartsScreen() {
       sensors: sensors,
     }).then((res) => {
       console.log(res);
-      setData(res);
+      setConsumptionData(res);
       setLoading(false);
     });
+
+    // setConsumptionData({
+    //   data: [
+    //     { label: "Buanderie", value: 15 },
+    //     { label: "Salle de bain 4", value: 13 },
+    //     { label: "Salle de bain 1", value: 10 },
+    //     { label: "Salle de bain 2", value: 9 },
+    //     { label: "Salle de bain 3", value: 8 },
+    //   ],
+    //   total_volume: 22,
+    // });
+    // setLoading(false);
   }, [
     appliedDate,
     appliedMode,
@@ -309,11 +328,30 @@ export default function ChartsScreen() {
     return {};
   };
 
+  const summary = () => {
+    return (
+      <View>
+        {consumptionData.total_volume == 0 ? (
+          <Text style={[styles.main_summary_text, { color: theme.dark_text }]}>
+            Vous n'avez rien consommé !
+          </Text>
+        ) : (
+          <Text style={[styles.main_summary_text, { color: theme.dark_text }]}>
+            Consommation totale :{" "}
+            <Text style={styles.main_summary_text_number}>
+              {consumptionData.total_volume}L
+            </Text>
+          </Text>
+        )}
+      </View>
+    );
+  };
+
   const chart = () => {
     switch (selectedType) {
       case "global":
         {
-          const numberOfBars = data.length;
+          const numberOfBars = consumptionData?.data?.length;
 
           const idealBarWidth = numberOfBars > 10 ? 12 : 22;
           const minSpacing = 5;
@@ -327,53 +365,113 @@ export default function ChartsScreen() {
 
           if (appliedMode !== "single")
             return (
-              <BarChart
-                // data={bar_sample_data}
-                data={data}
-                frontColor={theme.tint}
-                yAxisThickness={0}
-                xAxisThickness={0}
-                barBorderRadius={4}
-                barWidth={idealBarWidth}
-                spacing={spacing}
-                yAxisLabelWidth={40}
-                yAxisTextStyle={[
-                  styles.main_chart_text,
-                  { color: theme.secondary_text },
-                ]}
-                xAxisLabelTextStyle={[
-                  styles.main_chart_text,
-                  { color: theme.secondary_text },
-                ]}
-                disablePress
-                noOfSections={3}
-                disableScroll
-                initialSpacing={10}
-                endSpacing={5}
-                yAxisLabelSuffix="L"
-              />
+              <View style={{ marginTop: 5 }}>
+                <BarChart
+                  // data={bar_sample_data}
+                  data={consumptionData.data}
+                  frontColor={theme.tint}
+                  yAxisThickness={0}
+                  xAxisThickness={0}
+                  barBorderRadius={4}
+                  barWidth={idealBarWidth}
+                  spacing={spacing}
+                  yAxisLabelWidth={40}
+                  yAxisTextStyle={[
+                    styles.main_chart_text,
+                    { color: theme.secondary_text },
+                  ]}
+                  xAxisLabelTextStyle={[
+                    styles.main_chart_text,
+                    { color: theme.secondary_text },
+                  ]}
+                  disablePress
+                  noOfSections={3}
+                  disableScroll
+                  initialSpacing={10}
+                  endSpacing={5}
+                  yAxisLabelSuffix="L"
+                  maxValue={
+                    Math.max(
+                      ...consumptionData.data.map((item) => item.value)
+                    ) + 2
+                  }
+                />
+              </View>
             );
           return;
         }
         break;
       case "room": {
+        const first_data = consumptionData.data.slice(0, 3);
+        const max_value = first_data[0].value;
+
+        const numberOfBars = first_data.length;
+
+        if (numberOfBars == 3) {
+          // Affichage sous la forme podium (2 - 1 - 3)
+          [first_data[0], first_data[1]] = [first_data[1], first_data[0]];
+        }
+
+        const idealBarWidth = 26;
+
+        const totalBarsWidth = idealBarWidth * numberOfBars;
+        const remainingSpace = chart_width - totalBarsWidth;
+        const spacing = remainingSpace / (numberOfBars + 0.5);
+
+        const initialSpacing = numberOfBars == 2 ? 65 : 35;
+        const endSpacing = initialSpacing / 2;
+
         return (
-          <FlatList
-            data={data}
-            renderItem={({ item, index }) => (
-              <RoomConsumptionListItem item={item} index={index} />
-            )}
-            scrollEnabled={false}
-            ItemSeparatorComponent={
-              <View
-                style={[
-                  styles.list_separator,
-                  { backgroundColor: theme.stroke },
-                ]}
-              />
-            }
-          />
+          <View style={{ marginTop: 10, marginBottom: 5, marginLeft: -5 }}>
+            <BarChart
+              data={first_data}
+              frontColor={theme.tint}
+              yAxisThickness={0}
+              xAxisThickness={0}
+              barBorderRadius={4}
+              barWidth={idealBarWidth}
+              spacing={spacing}
+              yAxisLabelWidth={40}
+              yAxisTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              xAxisLabelTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              disablePress
+              noOfSections={2}
+              disableScroll
+              initialSpacing={initialSpacing}
+              endSpacing={endSpacing}
+              yAxisLabelSuffix="L"
+              height={120}
+              maxValue={max_value}
+            />
+          </View>
         );
+        break;
+      }
+      case "device": {
+        if (consumptionData.total_volume !== 0)
+          return (
+            <FlatList
+              data={consumptionData.data}
+              renderItem={({ item, index }) => (
+                <DeviceConsumptionListItem item={item} index={index} />
+              )}
+              scrollEnabled={false}
+              ItemSeparatorComponent={
+                <View
+                  style={[
+                    styles.list_separator,
+                    { backgroundColor: theme.stroke },
+                  ]}
+                />
+              }
+            />
+          );
         break;
       }
       default:
@@ -385,10 +483,10 @@ export default function ChartsScreen() {
     switch (selectedType) {
       case "global": {
         if (appliedMode == "single")
-          if (data.length !== 0)
+          if (consumptionData.data.length !== 0)
             return (
               <FlatList
-                data={data}
+                data={consumptionData.data}
                 renderItem={({ item, index }) => (
                   <HistoricListItem
                     item={item}
@@ -414,28 +512,97 @@ export default function ChartsScreen() {
             );
         return;
       }
+      case "room": {
+        if (consumptionData.total_volume !== 0)
+          return (
+            <FlatList
+              data={consumptionData.data}
+              renderItem={({ item, index }) => (
+                <RoomConsumptionListItem item={item} index={index} />
+              )}
+              scrollEnabled={false}
+              ItemSeparatorComponent={
+                <View
+                  style={[
+                    styles.list_separator,
+                    { backgroundColor: theme.stroke },
+                  ]}
+                />
+              }
+            />
+          );
+      }
       default:
         break;
     }
   };
 
-  const chartContainer = () => {
-    const child = chart();
-    if (child !== undefined)
-      return (
-        <View
-          style={[
-            styles.main_chart,
-            { backgroundColor: theme.light_bg, borderColor: theme.stroke },
-          ]}
-        >
-          {child}
-        </View>
-      );
+  const comparison = () => {
+    switch (selectedType) {
+      case "global": {
+        // Calcul si 90 litres par jour par ex.
+        const start = moment(appliedStartDate);
+        const end = moment(appliedEndDate);
+        const diff = end.diff(start, "days") + 1;
+        const data = [
+          { label: "Vous", value: consumptionData.total_volume },
+          {
+            label: "En moyenne",
+            value: diff * 90,
+          },
+        ];
+
+        const max_value = Math.max(...data.map((item) => item.value));
+
+        const numberOfBars = 2;
+
+        const idealBarWidth = 26;
+
+        const totalBarsWidth = idealBarWidth * numberOfBars;
+        const remainingSpace = chart_width - totalBarsWidth;
+        const spacing = remainingSpace / (numberOfBars + 0.5);
+
+        const initialSpacing = 65;
+        const endSpacing = initialSpacing / 2;
+
+        return (
+          <View style={{ marginTop: 10, marginBottom: 5, marginLeft: -5 }}>
+            <BarChart
+              data={data}
+              frontColor={theme.tint}
+              yAxisThickness={0}
+              xAxisThickness={0}
+              barBorderRadius={4}
+              barWidth={idealBarWidth}
+              spacing={spacing}
+              yAxisLabelWidth={40}
+              yAxisTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              xAxisLabelTextStyle={[
+                styles.main_chart_text,
+                { color: theme.secondary_text },
+              ]}
+              disablePress
+              noOfSections={2}
+              disableScroll
+              initialSpacing={initialSpacing}
+              endSpacing={endSpacing}
+              yAxisLabelSuffix="L"
+              height={120}
+              maxValue={max_value}
+            />
+          </View>
+        );
+        break;
+      }
+      default:
+        break;
+    }
   };
 
-  const historicContainer = () => {
-    const child = historic();
+  const section = (child: React.JSX.Element | undefined) => {
     if (child !== undefined)
       return (
         <View
@@ -499,6 +666,7 @@ export default function ChartsScreen() {
         </Animated.View>
         <Animated.ScrollView
           style={[styles.main, { paddingTop: headerHeight }]}
+          contentContainerStyle={{ paddingBottom: 120 }}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
         >
@@ -527,11 +695,13 @@ export default function ChartsScreen() {
           />
 
           {loading ? (
-            <ActivityIndicator />
+            <ActivityIndicator style={{ marginTop: 80 }} />
           ) : (
             <>
-              {chartContainer()}
-              {historicContainer()}
+              {section(summary())}
+              {section(chart())}
+              {section(historic())}
+              {section(comparison())}
             </>
           )}
         </Animated.ScrollView>
@@ -600,7 +770,11 @@ export default function ChartsScreen() {
             endDate={selectedEndDate}
             styles={{
               ...defaultStyles,
-              today: { ...styles.date_picker_today, borderColor: theme.tint }, // Add a border to today's date
+              today: {
+                ...styles.date_picker_today,
+                borderColor: theme.tint,
+              }, // Add a border to today's date
+              today_label: { color: theme.dark_text },
               selected: {
                 ...styles.date_picker_selected,
                 backgroundColor: theme.tint,
@@ -715,6 +889,17 @@ const styles = StyleSheet.create({
   date_picker_item: {
     borderWidth: 2,
     borderRadius: 12,
+    overflow: "hidden",
+  },
+
+  main_summary_text: {
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 18,
+    letterSpacing: -0.4,
+  },
+  main_summary_text_number: {
+    fontFamily: "Figtree-Medium",
+    fontSize: 16,
   },
 
   main_chart: {

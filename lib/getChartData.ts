@@ -32,6 +32,14 @@ interface SensorProps {
   key: string;
 }
 
+interface ResultProps {
+  data:
+    | UseProps[]
+    | { room: string; volume: number }[]
+    | { label: string | undefined; value: number }[];
+  total_volume: number;
+}
+
 const getChartData = async ({
   type,
   start_date,
@@ -65,111 +73,156 @@ const getChartData = async ({
 
   let aggregationMap: Record<string, number> = {};
 
-  let total = 0;
-
-  let results;
+  let result = {
+    total_volume: 0,
+  } as ResultProps;
 
   switch (type) {
     case "global": {
-      if (date_mode == "single") return data;
+      if (date_mode == "single") {
+        result.data = data;
 
-      const start = moment(start_date).startOf(
-        date_mode == "month" ? "isoWeek" : "month"
-      );
-      const end = moment(end_date).endOf(
-        date_mode == "month" ? "isoWeek" : "month"
-      );
-      const tempDate = start.clone();
+        data.forEach((item) => {
+          result.total_volume += item.volume;
+        });
+      } else {
+        const start = moment(start_date).startOf(
+          date_mode == "month" ? "isoWeek" : "month"
+        );
+        const end = moment(end_date).endOf(
+          date_mode == "month" ? "isoWeek" : "month"
+        );
+        const tempDate = start.clone();
 
-      while (tempDate.isSameOrBefore(end)) {
-        let key = "";
-        switch (date_mode) {
-          case "month":
-            key = tempDate.format("YYYY-[S]WW");
-            tempDate.add(1, "week");
-            break;
-          case "year":
-            key = tempDate.format("YYYY-MM");
-            tempDate.add(1, "month");
-            break;
-          default:
-            key = tempDate.format("YYYY-MM-DD");
-            tempDate.add(1, "day");
-            break;
-        }
-        aggregationMap[key] = 0;
-      }
-
-      data.forEach((item) => {
-        const item_date = moment(item.begin_tp);
-        let key = "";
-
-        switch (date_mode) {
-          case "month":
-            key = item_date.format("YYYY-[S]WW"); // Année ISO + numéro de semaine ISO
-            break;
-          case "year":
-            key = item_date.format("YYYY-MM");
-            break;
-          default:
-            key = item_date.format("YYYY-MM-DD");
-        }
-
-        if (!aggregationMap[key]) {
-          aggregationMap[key] = 0;
-        }
-        aggregationMap[key] += item.volume;
-      });
-
-      // Formatter les labels
-      results = Object.entries(aggregationMap).map(([label, value]) => {
-        const formattedLabel = () => {
+        while (tempDate.isSameOrBefore(end)) {
+          let key = "";
           switch (date_mode) {
             case "month":
-              return moment(label, "YYYY-[S]WW").format("[S]WW");
+              key = tempDate.format("YYYY-[S]WW");
+              tempDate.add(1, "week");
               break;
             case "year":
-              return moment(label, "YYYY-MM").format("MMM")[0].toUpperCase();
+              key = tempDate.format("YYYY-MM");
+              tempDate.add(1, "month");
               break;
             default:
+              key = tempDate.format("YYYY-MM-DD");
+              tempDate.add(1, "day");
               break;
           }
-        };
+          aggregationMap[key] = 0;
+        }
 
-        return {
-          label: formattedLabel(), // Affichage avec un format plus court
-          value,
-        };
-      });
+        data.forEach((item) => {
+          const item_date = moment(item.begin_tp);
+          let key = "";
+
+          switch (date_mode) {
+            case "month":
+              key = item_date.format("YYYY-[S]WW"); // Année ISO + numéro de semaine ISO
+              break;
+            case "year":
+              key = item_date.format("YYYY-MM");
+              break;
+            default:
+              key = item_date.format("YYYY-MM-DD");
+          }
+
+          if (!aggregationMap[key]) {
+            aggregationMap[key] = 0;
+          }
+          result.total_volume += item.volume;
+          aggregationMap[key] += item.volume;
+        });
+
+        // Formatter les labels
+        result.data = Object.entries(aggregationMap).map(([label, value]) => {
+          const formattedLabel = () => {
+            switch (date_mode) {
+              case "month":
+                return moment(label, "YYYY-[S]WW").format("[S]WW");
+                break;
+              case "year":
+                return moment(label, "YYYY-MM").format("MMM")[0].toUpperCase();
+                break;
+              default:
+                break;
+            }
+          };
+
+          return {
+            label: formattedLabel(), // Affichage avec un format plus court
+            value,
+          };
+        });
+      }
 
       break;
     }
     case "room": {
+      // 1. Tableau des différentes pièces (sans doublons)
       const uniqueRooms = [
         ...new Set(sensors.map((item: SensorProps) => item.room)),
       ];
-      // 1. Déclaration des clés de toutes les pièces
+
+      // 2. Déclaration des clés de toutes les pièces
       uniqueRooms.forEach((room: string) => {
         aggregationMap[room] = 0;
       });
 
+      // 3. Ajouter volume à chaque clé
       data.forEach((item, index) => {
         let key = sensors.filter((item2) => item2.id == item.id)[0].room;
 
-        total += item.volume;
+        result.total_volume += item.volume;
         aggregationMap[key] += item.volume;
       });
 
-      console.log(aggregationMap);
+      // 4. Traitement des champs
+      result.data = Object.entries(aggregationMap)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value); // tri décroissant par volume
 
-      results = Object.entries(aggregationMap);
+      break;
+    }
+    case "device": {
+      data.forEach((item, index) => {
+        let key = item.id;
+        if (!aggregationMap[key]) {
+          aggregationMap[key] = 0;
+        }
+
+        result.total_volume += item.volume;
+        aggregationMap[key] += item.volume;
+      });
+
+      result.data = Object.entries(aggregationMap)
+        .map(([id, value]) => {
+          const sensor_index = sensors.findIndex(
+            (item) => item.id.toString() == id
+          );
+
+          console.log(sensor_index);
+
+          let label = "";
+
+          if (sensor_index !== undefined) {
+            label = sensors[sensor_index].name;
+          }
+
+          return {
+            label,
+            value,
+          };
+        })
+        .sort((a, b) => b.value - a.value);
       break;
     }
     default:
       break;
   }
 
-  return results;
+  return result;
 };
 
 export default getChartData;

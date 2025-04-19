@@ -7,7 +7,7 @@ interface RoomConsumptionProps {
   index: number;
 }
 
-export default function RoomConsumptionListItem({
+export default function DeviceConsumptionListItem({
   item,
   index,
 }: RoomConsumptionProps) {

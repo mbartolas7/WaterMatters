@@ -11,7 +11,8 @@
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
-      "bundleIdentifier": "com.mbartolas7.WaterMatters"
+      "bundleIdentifier": "com.mbartolas7.WaterMatters",
+      "appleTeamId": "W5KDMSMD8H"
     },
     "android": {
       "googleServicesFile": "./google-services.json",

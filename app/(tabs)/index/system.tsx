@@ -87,7 +87,8 @@ export default function SystemScreen() {
     await sensorsCollection.get().then((querySnapshot) => {
       const data = [] as SensorProps[];
       querySnapshot.forEach((documentSnapshot) => {
-        data.push({ ...documentSnapshot.data(), key: documentSnapshot.id });
+        const doc_data = documentSnapshot.data() as Omit<SensorProps, "key">;
+        data.push({ ...doc_data, key: documentSnapshot.id });
       });
 
       setSensors(data);
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
   },
 
   bottom_sheet: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 20,
     flex: 1,
     paddingTop: 10,
   },

@@ -402,55 +402,58 @@ export default function ChartsScreen() {
         }
         break;
       case "room": {
-        const first_data = consumptionData.data.slice(0, 3);
-        const max_value = first_data[0].value;
+        if (consumptionData.total_volume !== 0) {
+          const first_data = consumptionData.data.slice(0, 3);
+          const max_value = first_data[0].value;
 
-        const numberOfBars = first_data.length;
+          const numberOfBars = first_data.length;
 
-        if (numberOfBars == 3) {
-          // Affichage sous la forme podium (2 - 1 - 3)
-          [first_data[0], first_data[1]] = [first_data[1], first_data[0]];
+          if (numberOfBars == 3) {
+            // Affichage sous la forme podium (2 - 1 - 3)
+            [first_data[0], first_data[1]] = [first_data[1], first_data[0]];
+          }
+
+          const idealBarWidth = 26;
+
+          const totalBarsWidth = idealBarWidth * numberOfBars;
+          const remainingSpace = chart_width - totalBarsWidth;
+          const spacing = remainingSpace / (numberOfBars + 0.5);
+
+          const initialSpacing = numberOfBars == 2 ? 65 : 35;
+          const endSpacing = initialSpacing / 2;
+
+          return (
+            <View style={{ marginTop: 10, marginBottom: 5, marginLeft: -5 }}>
+              <BarChart
+                data={first_data}
+                frontColor={theme.tint}
+                yAxisThickness={0}
+                xAxisThickness={0}
+                barBorderRadius={4}
+                barWidth={idealBarWidth}
+                spacing={spacing}
+                yAxisLabelWidth={40}
+                yAxisTextStyle={[
+                  styles.main_chart_text,
+                  { color: theme.secondary_text },
+                ]}
+                xAxisLabelTextStyle={[
+                  styles.main_chart_text,
+                  { color: theme.secondary_text },
+                ]}
+                disablePress
+                noOfSections={2}
+                disableScroll
+                initialSpacing={initialSpacing}
+                endSpacing={endSpacing}
+                yAxisLabelSuffix="L"
+                height={120}
+                maxValue={max_value}
+              />
+            </View>
+          );
         }
 
-        const idealBarWidth = 26;
-
-        const totalBarsWidth = idealBarWidth * numberOfBars;
-        const remainingSpace = chart_width - totalBarsWidth;
-        const spacing = remainingSpace / (numberOfBars + 0.5);
-
-        const initialSpacing = numberOfBars == 2 ? 65 : 35;
-        const endSpacing = initialSpacing / 2;
-
-        return (
-          <View style={{ marginTop: 10, marginBottom: 5, marginLeft: -5 }}>
-            <BarChart
-              data={first_data}
-              frontColor={theme.tint}
-              yAxisThickness={0}
-              xAxisThickness={0}
-              barBorderRadius={4}
-              barWidth={idealBarWidth}
-              spacing={spacing}
-              yAxisLabelWidth={40}
-              yAxisTextStyle={[
-                styles.main_chart_text,
-                { color: theme.secondary_text },
-              ]}
-              xAxisLabelTextStyle={[
-                styles.main_chart_text,
-                { color: theme.secondary_text },
-              ]}
-              disablePress
-              noOfSections={2}
-              disableScroll
-              initialSpacing={initialSpacing}
-              endSpacing={endSpacing}
-              yAxisLabelSuffix="L"
-              height={120}
-              maxValue={max_value}
-            />
-          </View>
-        );
         break;
       }
       case "device": {
@@ -540,7 +543,7 @@ export default function ChartsScreen() {
   const comparison = () => {
     switch (selectedType) {
       case "global": {
-        // Calcul si 90 litres par jour par ex.
+        // Calcul si 96 litres par jour par ex.
         const start = moment(appliedStartDate);
         const end = moment(appliedEndDate);
         const diff = end.diff(start, "days") + 1;
@@ -548,7 +551,7 @@ export default function ChartsScreen() {
           { label: "Vous", value: consumptionData.total_volume },
           {
             label: "En moyenne",
-            value: diff * 90,
+            value: diff * 96,
           },
         ];
 

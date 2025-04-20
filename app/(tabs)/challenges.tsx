@@ -11,6 +11,10 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
+
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 import ChallengeListItem from "@/components/ChallengeListItem";
@@ -74,6 +78,45 @@ const challenges_data = [
   },
 ];
 
+const challenge_descriptions = {
+  express_shower: "Description douche",
+  water_master_1: "Description wm1",
+  water_master_2: "Description wm2",
+  water_master_3: "Description wm3",
+  streak: "Description Streak",
+  // {
+  //   key: "express_shower",
+  //   description: "Description douche"
+  // },
+  // {
+  //   key: "water_master_1",
+  //   description: "Description wm1"
+  // },
+  // {
+  //   key: "water_master_2",
+  //   description: "Description wm2"
+  // },
+  // {
+  //   key: "water_master_3",
+  //   description: "Description wm3"
+  // },
+};
+
+interface ChallengeProps {
+  success?: boolean;
+  last_checked?: FirebaseFirestoreTypes.Timestamp;
+  active?: boolean;
+  longest_streak?: number;
+  streak?: number;
+  total_day_volume?: number;
+  average_duration?: number;
+  count?: number;
+  key: string;
+  description: string;
+}
+
+const challengesCollection = firestore().collection("challenges");
+
 export default function ChallengesScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -81,14 +124,37 @@ export default function ChallengesScreen() {
 
   const [challenges, setChallenges] = useState<ChallengeProps[]>([]);
 
+  const [loading, setLoading] = useState<boolean>(true);
+
   const scrollY = useSharedValue(0);
 
   const insets = useSafeAreaInsets();
   const theme = useThemeColor();
 
   useEffect(() => {
-    setChallenges(challenges_data);
+    // setChallenges(challenges_data);
+    getData();
   }, []);
+
+  const getData = async () => {
+    await challengesCollection.get().then((querySnapshot) => {
+      const data = [] as ChallengeProps[];
+      querySnapshot.forEach((documentSnapshot) => {
+        const doc_data = documentSnapshot.data() as Omit<ChallengeProps, "key">;
+        const key = documentSnapshot.id;
+        data.push({
+          ...doc_data,
+          key: key,
+          description: challenge_descriptions[key]
+            ? challenge_descriptions[key]
+            : "",
+        });
+      });
+
+      setChallenges(data);
+      setLoading(false);
+    });
+  };
 
   const handleApplyFilter = (filter: string) => {
     let next_data = challenges_data;

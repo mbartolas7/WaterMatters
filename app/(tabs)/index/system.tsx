@@ -42,6 +42,7 @@ interface SensorProps {
   room: string;
   id: number;
   key: string;
+  type: string;
 }
 
 interface BottomSheetModalRef {
@@ -57,6 +58,14 @@ const rooms_data = [
   "Buanderie",
 ];
 
+const types_data = [
+  "Douche",
+  "Évier",
+  "Machine à laver",
+  "Lave vaisselle",
+  "Autre",
+];
+
 export default function SystemScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -64,7 +73,8 @@ export default function SystemScreen() {
   const [loading, setLoading] = useState<boolean>(true);
 
   const [input, setInput] = useState<string>("");
-  const [room, setRoom] = useState<string>("");
+  const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("");
   const [itemKey, setItemKey] = useState("");
 
   const scrollY = useSharedValue(0);
@@ -74,6 +84,7 @@ export default function SystemScreen() {
 
   const rename_sheet = useRef<BottomSheetModalRef>(null);
   const room_sheet = useRef<BottomSheetModalRef>(null);
+  const type_sheet = useRef<BottomSheetModalRef>(null);
 
   const input_ref = useRef(null);
 
@@ -116,15 +127,34 @@ export default function SystemScreen() {
   };
 
   const handleChangeRoom = () => {
-    if (room.length !== 0) {
+    if (selectedRoom.length !== 0) {
       sensorsCollection
         .doc(itemKey)
         .update({
-          room: room,
+          room: selectedRoom,
         })
         .then(() => {
           Alert.alert("Succès", "Pièce mise à jour avec succès");
           room_sheet.current?.toggleShowBottomSheet();
+        })
+        .catch((res) => {
+          console.log(res);
+        });
+    } else {
+      Alert.alert("Erreur", "Désolé, une erreur est survenue");
+    }
+  };
+
+  const handleChangeType = () => {
+    if (selectedType.length !== 0) {
+      sensorsCollection
+        .doc(itemKey)
+        .update({
+          type: selectedType,
+        })
+        .then(() => {
+          Alert.alert("Succès", "Type mis à jour avec succès");
+          type_sheet.current?.toggleShowBottomSheet();
         })
         .catch((res) => {
           console.log(res);
@@ -145,7 +175,7 @@ export default function SystemScreen() {
     item: SensorProps;
     index: number;
   }) => {
-    const { name, room, id, key } = item;
+    const { name, room, id, key, type } = item;
 
     return (
       <View
@@ -165,27 +195,66 @@ export default function SystemScreen() {
             {name}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            setRoom(room);
-            setItemKey(key);
-            room_sheet.current?.toggleShowBottomSheet();
-          }}
-        >
-          <Text style={[styles.list_item_room, { color: theme.dark_text }]}>
-            <Text style={styles.list_item_room_bold}>Pièce : </Text>
-            {room}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.list_item_text}>
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedRoom(room);
+              setItemKey(key);
+              room_sheet.current?.toggleShowBottomSheet();
+            }}
+          >
+            <Text
+              style={[styles.list_item_text_room, { color: theme.dark_text }]}
+            >
+              <Text style={styles.list_item_text_room_bold}>Pièce : </Text>
+              {room}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedType(type);
+              setItemKey(key);
+              type_sheet.current?.toggleShowBottomSheet();
+            }}
+          >
+            <Text
+              style={[styles.list_item_text_room, { color: theme.dark_text }]}
+            >
+              <Text style={styles.list_item_text_room_bold}>Type : </Text>
+              {type}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
 
   const roomListItem = ({ item, index }: { item: string; index: number }) => {
-    const selected = item == room;
+    const selected = item == selectedRoom;
     return (
       <TouchableOpacity
-        onPress={() => setRoom(item)}
+        onPress={() => setSelectedRoom(item)}
+        style={styles.bottom_sheet_room}
+      >
+        <Text style={styles.bottom_sheet_room_text}>{item}</Text>
+        <View
+          style={[
+            styles.bottom_sheet_room_selector,
+            {
+              borderColor: theme.tint,
+              backgroundColor: selected ? theme.tint : "white",
+            },
+          ]}
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  const typeListItem = ({ item, index }: { item: string; index: number }) => {
+    const selected = item == selectedType;
+    return (
+      <TouchableOpacity
+        onPress={() => setSelectedType(item)}
         style={styles.bottom_sheet_room}
       >
         <Text style={styles.bottom_sheet_room_text}>{item}</Text>
@@ -331,7 +400,7 @@ export default function SystemScreen() {
             setShowBottomTab(false);
           }
         }}
-        footer_dependencies={[room]}
+        footer_dependencies={[selectedRoom]}
         footer={
           <ButtonContainer action={() => handleChangeRoom()}>
             <View
@@ -356,6 +425,48 @@ export default function SystemScreen() {
           data={rooms_data}
           style={[styles.bottom_sheet, { backgroundColor: theme.light_bg }]}
           renderItem={roomListItem}
+          contentContainerStyle={{ gap: 15 }}
+        />
+      </BottomSheetModalContainer>
+
+      <BottomSheetModalContainer
+        title={"Type de l'appareil"}
+        snap_points={["75%"]}
+        ref={type_sheet}
+        onAnimate={(actual_index, next_index) => {
+          // index == -1 => close
+          // index == 0 => first snap point in the array
+          if (next_index == -1) {
+            setShowBottomTab(true);
+          } else {
+            setShowBottomTab(false);
+          }
+        }}
+        footer_dependencies={[selectedType]}
+        footer={
+          <ButtonContainer action={() => handleChangeType()}>
+            <View
+              style={[
+                styles.bottom_sheet_footer,
+                { backgroundColor: theme.tint, borderColor: theme.stroke },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.bottom_sheet_footer_text,
+                  { color: theme.light_text },
+                ]}
+              >
+                Valider
+              </Text>
+            </View>
+          </ButtonContainer>
+        }
+      >
+        <BottomSheetFlatList
+          data={types_data}
+          style={[styles.bottom_sheet, { backgroundColor: theme.light_bg }]}
+          renderItem={typeListItem}
           contentContainerStyle={{ gap: 15 }}
         />
       </BottomSheetModalContainer>
@@ -401,19 +512,22 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 10,
   },
+  list_item_text: {
+    gap: 5,
+  },
   list_item_title: {
     fontFamily: "Figtree-SemiBold",
     fontSize: 18,
     letterSpacing: -0.4,
   },
-  list_item_room: {
+  list_item_text_room: {
     fontFamily: "Figtree-Medium",
     fontSize: 16,
     letterSpacing: -0.4,
     lineHeight: 18,
     flex: 1,
   },
-  list_item_room_bold: {
+  list_item_text_room_bold: {
     fontFamily: "Figtree-SemiBold",
   },
 

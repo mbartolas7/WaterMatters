@@ -1,22 +1,38 @@
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import firestore from "@react-native-firebase/firestore";
+import moment from "moment";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
   //   size: number;
   type: "chart" | "goal" | "current" | "logs";
   //   type: string;
-  config?: { id?: number };
+  config?: { id?: number; mode: string };
   key: number;
+  id: number;
 }
 
+const usesCollection = firestore().collection("uses");
+
 export default function WidgetListItem(props: WidgetProps) {
-  const { size, type, config } = props;
+  const { size, type, config, id } = props;
 
   const theme = useThemeColor();
+
+  const [data, setData] = useState();
+  const [loading, setLoading] = useState<boolean>(true);
 
   const chart_width =
     size == 2
@@ -39,7 +55,89 @@ export default function WidgetListItem(props: WidgetProps) {
     { value: 30, color: theme.light_bg },
   ];
 
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const getData = async () => {
+    switch (type) {
+      case "chart":
+        {
+          let begin_tp;
+          let end_tp = new Date();
+
+          switch (config?.mode) {
+            case "week":
+              begin_tp = moment()
+                .local()
+                .startOf("isoWeek")
+                .startOf("day")
+                .toDate();
+              break;
+            case "month":
+              begin_tp = moment()
+                .startOf("month")
+                .add(1, "day")
+                .startOf("day")
+                .toDate();
+              break;
+            default:
+              break;
+          }
+
+          // Convertir les dates!
+          begin_tp = firestore.Timestamp.fromDate(begin_tp);
+          end_tp = firestore.Timestamp.fromDate(end_tp);
+
+          await usesCollection
+            .where("begin_tp", ">=", begin_tp)
+            .where("begin_tp", "<=", end_tp)
+            .get()
+            .then((querySnapshot) => {
+              const uses_data = [];
+              querySnapshot.forEach((documentSnapshot) => {
+                const sensor = documentSnapshot.data() as Omit<
+                  SensorProps,
+                  "key"
+                >;
+                uses_data.push({ ...sensor, key: documentSnapshot.id });
+              });
+
+              setData(uses_data);
+            })
+            .catch((e) => console.log(e));
+        }
+        break;
+      case "logs": {
+        await usesCollection
+          .limit(3)
+          .orderBy("begin_tp", "desc")
+          .get()
+          .then((querySnapshot) => {
+            const uses_data = [];
+            querySnapshot.forEach((documentSnapshot) => {
+              const sensor = documentSnapshot.data() as Omit<
+                SensorProps,
+                "key"
+              >;
+              uses_data.push({ ...sensor, key: documentSnapshot.id });
+            });
+
+            console.log(uses_data);
+            setData(uses_data);
+          })
+          .catch((e) => console.log(e));
+      }
+      default:
+        break;
+    }
+
+    setLoading(false);
+  };
+
   const renderContent = () => {
+    if (loading) return <ActivityIndicator />;
+
     switch (type) {
       case "chart":
         return (
@@ -131,26 +229,115 @@ export default function WidgetListItem(props: WidgetProps) {
                   styles.current_circle,
                   { backgroundColor: theme.success },
                 ]}
-              ></View>
+              />
             </View>
-            <View style={styles.section_main}></View>
+            <View style={styles.section_main}>
+              <View style={styles.section_current_item}>
+                <Text style={[styles.section_text, { color: theme.dark_text }]}>
+                  Évier
+                </Text>
+                <Text
+                  style={[
+                    styles.section_secondary_text,
+                    { color: theme.secondary_text },
+                  ]}
+                >
+                  Cuisine
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.section_divider,
+                  { backgroundColor: theme.stroke },
+                ]}
+              />
+              <View style={styles.section_current_item}>
+                <Text style={[styles.section_text, { color: theme.dark_text }]}>
+                  Lavabos
+                </Text>
+                <Text
+                  style={[
+                    styles.section_secondary_text,
+                    { color: theme.secondary_text },
+                  ]}
+                >
+                  Salle de bain
+                </Text>
+              </View>
+            </View>
+            <View style={styles.section_footer}>
+              <Text
+                style={[
+                  styles.section_footer_text_2,
+                  { color: theme.dark_text },
+                ]}
+              >
+                +3 appareils
+              </Text>
+            </View>
           </View>
         );
         break;
 
       case "logs":
         return (
-          <View style={styles.section}>
+          <View style={[styles.section, { gap: 10 }]}>
             <View style={styles.section_header}>
               <Text style={styles.section_header_title}>
                 Dernières utilisations :
               </Text>
             </View>
-            {/* <Text style={styles.title}>Dernières utilisations : </Text>
-            <Text style={styles.text}> • Douche | Salle de bain</Text>
-            <Text style={styles.text}> • Évier | Cuisine</Text>
-            <Text style={styles.text}> • Lavabo | Salle de bain</Text>
-            <Text style={styles.text}> • Machine à laver | Buanderie</Text> */}
+            {/* <View style={[styles.section_main, { gap: 5 }]}>
+              <View style={styles.section_logs_item}>
+                <Text>Évier • 2m 12s</Text>
+                <Text>Cuisine</Text>
+              </View>
+              <View
+                style={[
+                  styles.section_divider,
+                  { backgroundColor: theme.stroke },
+                ]}
+              />
+              <View style={styles.section_logs_item}>
+                <Text>Lavabos • 1m 30s</Text>
+                <Text>Salle de bain</Text>
+              </View>
+              <View
+                style={[
+                  styles.section_divider,
+                  { backgroundColor: theme.stroke },
+                ]}
+              />
+              <View style={styles.section_logs_item}>
+                <Text>Évier • 1m 12s</Text>
+                <Text>Cuisine</Text>
+              </View>
+              <View
+                style={[
+                  styles.section_divider,
+                  { backgroundColor: theme.stroke },
+                ]}
+              />
+              <View style={styles.section_logs_item}>
+                <Text>Douche • 10m</Text>
+                <Text>Salle de bain</Text>
+              </View>
+              <View
+                style={[
+                  styles.section_divider,
+                  { backgroundColor: theme.stroke },
+                ]}
+              />
+              <View style={styles.section_logs_item}>
+                <Text>Douche • 8m 32s</Text>
+                <Text>Salle de bain</Text>
+              </View>
+            </View> */}
+            <FlatList
+              style={[styles.section_main, { gap: 5 }]}
+              data={data}
+              renderItem={({ item }) => <Text>{item.id}</Text>}
+            />
           </View>
         );
         break;
@@ -200,6 +387,16 @@ const styles = StyleSheet.create({
 
   section_main: {
     flex: 1,
+    gap: 2,
+  },
+
+  section_current_item: {
+    gap: 2,
+  },
+
+  section_logs_item: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 
   section_header_title: {
@@ -218,6 +415,18 @@ const styles = StyleSheet.create({
   section_bold_text: {
     fontFamily: "Figtree-Bold",
   },
+  section_secondary_text: {
+    fontFamily: "Figtree-Regular",
+    fontSize: 14,
+    lineHeight: 18,
+    letterSpacing: -0.4,
+  },
+
+  section_divider: {
+    height: 1,
+    width: "100%",
+    marginTop: 3,
+  },
 
   section_footer: {
     alignItems: "flex-end",
@@ -227,6 +436,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     letterSpacing: -0.4,
     lineHeight: 20,
+  },
+  section_footer_text_2: {
+    fontFamily: "Figtree-Medium",
+    fontSize: 14,
+    letterSpacing: -0.4,
   },
 
   bar_chart: {

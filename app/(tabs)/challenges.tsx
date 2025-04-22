@@ -42,64 +42,32 @@ const filters_data = [
   },
 ];
 
-const challenges_data = [
-  {
-    title: "Économiseur d’eau I",
+const challenges_data = {
+  express_shower: {
+    name: "Douche Express",
     description:
-      "Ceci est le premier challenge à réaliser. Il consiste en quelque chose qui sera défini plus tard.",
-    progression: 100,
-    success_date: 1743347847000,
+      "Prenez, en moyenne, une douche d'une durée maximale de 7 minutes pendant une semaine.",
   },
-  {
-    title: "Économiseur d’eau II",
-    description: "Ceci est le second challenge à réaliser.",
-    progression: 67,
-    success_date: undefined,
-  },
-  {
-    title: "Économiseur d’eau III",
-    description: "Ceci est le troisème challenge à réaliser.",
-    progression: 0,
-    success_date: undefined,
-  },
-  {
-    title: "Water Master I",
+  water_master_1: {
+    name: "Water Master I",
     description:
-      "Ceci est le troisième challenge à réaliser. Il consiste en quelque chose qui sera défini plus tard.",
-    progression: 100,
-    success_date: 1740925047000,
+      "Consommez chaque jour moins ou autant que la moyenne pendant une semaine.",
   },
-  {
-    title: "Water Master II",
+  water_master_2: {
+    name: "Water Master II",
     description:
-      "Ceci est le quatrième challenge à réaliser. Il est en cours de réalisation.",
-    progression: 100,
-    success_date: 1740838647000,
+      "Consommez chaque jour moins ou autant que la moyenne pendant un mois.",
   },
-];
-
-const challenge_descriptions = {
-  express_shower: "Description douche",
-  water_master_1: "Description wm1",
-  water_master_2: "Description wm2",
-  water_master_3: "Description wm3",
-  streak: "Description Streak",
-  // {
-  //   key: "express_shower",
-  //   description: "Description douche"
-  // },
-  // {
-  //   key: "water_master_1",
-  //   description: "Description wm1"
-  // },
-  // {
-  //   key: "water_master_2",
-  //   description: "Description wm2"
-  // },
-  // {
-  //   key: "water_master_3",
-  //   description: "Description wm3"
-  // },
+  water_master_3: {
+    name: "Water Master III",
+    description:
+      "Consommez chaque jour moins ou autant que la moyenne pendant un an.",
+  },
+  streak: {
+    name: "Consommer Moins",
+    description:
+      "Consommez moins ou autant que la moyenne pendant une journée. Votre score augmente à chaque nouvelle journée réussie !",
+  },
 };
 
 interface ChallengeProps {
@@ -113,6 +81,8 @@ interface ChallengeProps {
   count?: number;
   key: string;
   description: string;
+  name: string;
+  success_tp?: FirebaseFirestoreTypes.Timestamp;
 }
 
 const challengesCollection = firestore().collection("challenges");
@@ -122,6 +92,9 @@ export default function ChallengesScreen() {
 
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
+  const [defaultChallenges, setDefaultChallenges] = useState<ChallengeProps[]>(
+    []
+  );
   const [challenges, setChallenges] = useState<ChallengeProps[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -142,31 +115,36 @@ export default function ChallengesScreen() {
       querySnapshot.forEach((documentSnapshot) => {
         const doc_data = documentSnapshot.data() as Omit<ChallengeProps, "key">;
         const key = documentSnapshot.id;
+        const challenge_data = challenges_data[key];
         data.push({
           ...doc_data,
           key: key,
-          description: challenge_descriptions[key]
-            ? challenge_descriptions[key]
-            : "",
+          description: challenge_data ? challenge_data.description : "",
+          name: challenge_data ? challenge_data.name : "",
         });
       });
+      const index = data.findIndex((item) => item.key == "streak");
+      if (index > -1) {
+        [data[0], data[index]] = [data[index], data[0]];
+      }
 
+      setDefaultChallenges(data);
       setChallenges(data);
       setLoading(false);
     });
   };
 
   const handleApplyFilter = (filter: string) => {
-    let next_data = challenges_data;
+    let next_data = defaultChallenges;
 
     switch (filter) {
       case "all":
         break;
       case "realized":
-        next_data = next_data.filter((item) => item.progression == 100);
+        next_data = next_data.filter((item) => item.success);
         break;
       case "in_progress":
-        next_data = next_data.filter((item) => item.progression < 100);
+        next_data = next_data.filter((item) => !item.success);
         break;
       default:
         break;
@@ -202,6 +180,14 @@ export default function ChallengesScreen() {
   };
 
   const headerComponent = useCallback(() => {
+    const realized_challenges = challenges.filter(
+      (item) => item.success
+    ).length;
+
+    const challenges_to_success = challenges.length - realized_challenges - 1;
+
+    const points = 256;
+
     return (
       <View style={styles.header_component}>
         <View style={styles.card}>
@@ -222,13 +208,13 @@ export default function ChallengesScreen() {
               <View style={styles.card_gradient_left_text}>
                 <Text style={styles.card_gradient_left_text_line}>
                   <Text style={styles.card_gradient_left_text_line_bold}>
-                    x/x
+                    {realized_challenges}/{challenges_to_success}
                   </Text>{" "}
                   défis réalisés
                 </Text>
                 <Text style={styles.card_gradient_left_text_line}>
                   <Text style={styles.card_gradient_left_text_line_bold}>
-                    x
+                    {points}
                   </Text>{" "}
                   points
                 </Text>
@@ -247,7 +233,7 @@ export default function ChallengesScreen() {
         />
       </View>
     );
-  }, []);
+  }, [defaultChallenges]);
 
   return (
     <View
@@ -280,7 +266,13 @@ export default function ChallengesScreen() {
           contentContainerStyle={{ gap: 6, paddingBottom: 120, paddingTop: 15 }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item, index }) => (
-            <ChallengeListItem key={index} {...item} />
+            <ChallengeListItem
+              key={index}
+              item={item}
+              water_master_streak={
+                challenges.filter((item2) => item2.key == "streak")[0]?.streak
+              }
+            />
           )}
           onScroll={scrollHandler}
           scrollEventThrottle={16}

@@ -17,8 +17,9 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setSensors } from "@/redux/slices/sensorsSlice";
+import { getWidgets } from "@/redux/slices/widgetsSlice";
 
 interface SensorProps {
   name: string;
@@ -26,6 +27,49 @@ interface SensorProps {
   id: number;
   key: string;
 }
+
+// const widgets = [
+//   {
+//     size: 2,
+//     type: "chart",
+//     config: {},
+//   },
+//   { size: 0 },
+//   {
+//     size: 1,
+//     type: "goal",
+//     config: {
+//       id: 1,
+//     },
+//   },
+// {
+//   size: 1,
+//   type: "current",
+// },
+//   {
+//     size: 2,
+//     type: "logs",
+//   },
+//   { size: 0 },
+//   {
+//     size: 1,
+//     type: "goal",
+//     config: {
+//       id: 2,
+//     },
+//   },
+//   {
+//     size: 1,
+//     type: "goal",
+//     config: {
+//       id: 1,
+//     },
+//   },
+//   {
+//     size: 2,
+//     type: "logs",
+//   },
+// ] as const;
 
 const sensorsCollection = firestore().collection("sensors");
 
@@ -36,6 +80,8 @@ export default function HomeScreen() {
   const theme = useThemeColor();
 
   const scrollY = useSharedValue(0);
+
+  const widgets = useSelector(getWidgets);
 
   const dispatch = useDispatch();
 
@@ -54,59 +100,6 @@ export default function HomeScreen() {
       dispatch(setSensors(data));
     });
   };
-
-  const widgets = [
-    {
-      size: 2,
-      type: "chart",
-      config: {},
-    },
-    { size: 0 },
-    {
-      size: 1,
-      type: "goal",
-      config: {
-        id: 1,
-      },
-    },
-    {
-      size: 1,
-      type: "current",
-    },
-    {
-      size: 2,
-      type: "logs",
-    },
-    { size: 0 },
-    {
-      size: 2,
-      type: "logs",
-    },
-    { size: 0 },
-    {
-      size: 2,
-      type: "logs",
-    },
-    { size: 0 },
-    {
-      size: 1,
-      type: "goal",
-      config: {
-        id: 2,
-      },
-    },
-    {
-      size: 1,
-      type: "goal",
-      config: {
-        id: 1,
-      },
-    },
-    {
-      size: 2,
-      type: "logs",
-    },
-  ] as const;
 
   const headerAnimatedStyles = useAnimatedStyle(() => {
     return {

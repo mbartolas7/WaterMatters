@@ -33,6 +33,14 @@ export default function HistoricListItem({
 
   const theme = useThemeColor();
 
+  const formattedDuration = () => {
+    let text = `${Math.floor(duration / 60)}m`;
+    if (duration % 60) {
+      text += ` ${duration % 60}s`;
+    }
+    return text;
+  };
+
   return (
     <View style={styles.item}>
       <View style={styles.item_text}>
@@ -40,11 +48,11 @@ export default function HistoricListItem({
           {name}
         </Text>
         <Text style={[styles.item_text_info, { color: theme.secondary_text }]}>
-          {room} • {volume}L • {duration}min
+          {room} • {volume}L • {formattedDuration()}
         </Text>
       </View>
       <Text style={[styles.item_date, { color: theme.dark_text }]}>
-        {moment(begin_tp).format("h:mm")}
+        {moment(begin_tp).format("LT")}
       </Text>
     </View>
   );

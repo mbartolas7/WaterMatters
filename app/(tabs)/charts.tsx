@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,6 +27,7 @@ import { BottomSheetView } from "@gorhom/bottom-sheet";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
 import moment from "moment";
+import "moment/locale/fr"; // Importer la locale française
 import { ChevronDown } from "lucide-react-native";
 import { useShowBottomTab } from "@/hooks/useShowBottomTab";
 import { BarChart } from "react-native-gifted-charts";
@@ -366,6 +366,7 @@ export default function ChartsScreen() {
           if (appliedMode !== "single")
             return (
               <View style={{ marginTop: 5 }}>
+                {/* <Text></Text> */}
                 <BarChart
                   // data={bar_sample_data}
                   data={consumptionData.data}
@@ -496,7 +497,7 @@ export default function ChartsScreen() {
                     index={index}
                     sensor={
                       sensors.filter(
-                        (item: SensorProps) => item.id == item.id
+                        (item2: SensorProps) => item2.id == item.id
                       )[0]
                     }
                   />
@@ -610,7 +611,7 @@ export default function ChartsScreen() {
       return (
         <View
           style={[
-            styles.main_historic,
+            styles.section,
             { backgroundColor: theme.light_bg, borderColor: theme.stroke },
           ]}
         >
@@ -895,6 +896,21 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
+  section: {
+    padding: 15,
+    borderRadius: 15,
+    borderWidth: 2,
+    marginTop: 10,
+  },
+  section_title: {
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 18,
+    letterSpacing: -0.4,
+    // marginTop: 5,
+    marginBottom: 20,
+    // marginLeft: -5,
+  },
+
   main_summary_text: {
     fontFamily: "Figtree-SemiBold",
     fontSize: 18,
@@ -917,12 +933,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  main_historic: {
-    padding: 15,
-    borderRadius: 15,
-    borderWidth: 2,
-    marginTop: 10,
-  },
   main_historic_list: {
     flex: 1,
   },

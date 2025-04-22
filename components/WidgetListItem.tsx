@@ -287,7 +287,7 @@ export default function WidgetListItem(props: WidgetProps) {
                 Dernières utilisations :
               </Text>
             </View>
-            {/* <View style={[styles.section_main, { gap: 5 }]}>
+            <View style={[styles.section_main, { gap: 5 }]}>
               <View style={styles.section_logs_item}>
                 <Text>Évier • 2m 12s</Text>
                 <Text>Cuisine</Text>
@@ -332,12 +332,12 @@ export default function WidgetListItem(props: WidgetProps) {
                 <Text>Douche • 8m 32s</Text>
                 <Text>Salle de bain</Text>
               </View>
-            </View> */}
-            <FlatList
+            </View>
+            {/* <FlatList
               style={[styles.section_main, { gap: 5 }]}
               data={data}
               renderItem={({ item }) => <Text>{item.id}</Text>}
-            />
+            /> */}
           </View>
         );
         break;

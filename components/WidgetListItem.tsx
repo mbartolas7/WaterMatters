@@ -1,9 +1,12 @@
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { BarChart, PieChart } from "react-native-gifted-charts";
@@ -13,6 +16,10 @@ import { useEffect, useState } from "react";
 
 import firestore from "@react-native-firebase/firestore";
 import moment from "moment";
+import LogsListItem from "./widgets/LogsListItem";
+import { useSelector } from "react-redux";
+import { getSensors } from "@/redux/slices/sensorsSlice";
+import getChartData from "@/lib/getChartData";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
@@ -24,6 +31,13 @@ interface WidgetProps {
   id: number;
 }
 
+interface SensorProps {
+  name: string;
+  room: string;
+  id: number;
+  key: string;
+}
+
 const usesCollection = firestore().collection("uses");
 
 export default function WidgetListItem(props: WidgetProps) {
@@ -33,6 +47,8 @@ export default function WidgetListItem(props: WidgetProps) {
 
   const [data, setData] = useState();
   const [loading, setLoading] = useState<boolean>(true);
+
+  const sensors = useSelector(getSensors);
 
   const chart_width =
     size == 2
@@ -86,31 +102,42 @@ export default function WidgetListItem(props: WidgetProps) {
           }
 
           // Convertir les dates!
-          begin_tp = firestore.Timestamp.fromDate(begin_tp);
-          end_tp = firestore.Timestamp.fromDate(end_tp);
+          // begin_tp = firestore.Timestamp.fromDate(begin_tp);
+          // end_tp = firestore.Timestamp.fromDate(end_tp);
 
-          await usesCollection
-            .where("begin_tp", ">=", begin_tp)
-            .where("begin_tp", "<=", end_tp)
-            .get()
-            .then((querySnapshot) => {
-              const uses_data = [];
-              querySnapshot.forEach((documentSnapshot) => {
-                const sensor = documentSnapshot.data() as Omit<
-                  SensorProps,
-                  "key"
-                >;
-                uses_data.push({ ...sensor, key: documentSnapshot.id });
-              });
+          getChartData({
+            type: "global",
+            start_date: begin_tp,
+            end_date: end_tp,
+            date_mode: "week",
+            sensors: sensors,
+          }).then((res) => {
+            console.log(res);
+            // setData(res);
+            // setLoading(false);
+          });
+          // await usesCollection
+          //   .where("begin_tp", ">=", begin_tp)
+          //   .where("begin_tp", "<=", end_tp)
+          //   .get()
+          //   .then((querySnapshot) => {
+          //     const uses_data = [];
+          //     querySnapshot.forEach((documentSnapshot) => {
+          //       const sensor = documentSnapshot.data() as Omit<
+          //         SensorProps,
+          //         "key"
+          //       >;
+          //       uses_data.push({ ...sensor, key: documentSnapshot.id });
+          //     });
 
-              setData(uses_data);
-            })
-            .catch((e) => console.log(e));
+          //     setData(uses_data);
+          //   })
+          //   .catch((e) => console.log(e));
         }
         break;
       case "logs": {
         await usesCollection
-          .limit(3)
+          .limit(4)
           .orderBy("begin_tp", "desc")
           .get()
           .then((querySnapshot) => {
@@ -147,7 +174,7 @@ export default function WidgetListItem(props: WidgetProps) {
             </View>
             <View style={styles.bar_chart}>
               <BarChart
-                data={bar_sample_data}
+                data={data}
                 frontColor={theme.tint}
                 yAxisThickness={0}
                 xAxisThickness={0}
@@ -287,57 +314,29 @@ export default function WidgetListItem(props: WidgetProps) {
                 Dernières utilisations :
               </Text>
             </View>
-            <View style={[styles.section_main, { gap: 5 }]}>
-              <View style={styles.section_logs_item}>
-                <Text>Évier • 2m 12s</Text>
-                <Text>Cuisine</Text>
-              </View>
-              <View
-                style={[
-                  styles.section_divider,
-                  { backgroundColor: theme.stroke },
-                ]}
-              />
-              <View style={styles.section_logs_item}>
-                <Text>Lavabos • 1m 30s</Text>
-                <Text>Salle de bain</Text>
-              </View>
-              <View
-                style={[
-                  styles.section_divider,
-                  { backgroundColor: theme.stroke },
-                ]}
-              />
-              <View style={styles.section_logs_item}>
-                <Text>Évier • 1m 12s</Text>
-                <Text>Cuisine</Text>
-              </View>
-              <View
-                style={[
-                  styles.section_divider,
-                  { backgroundColor: theme.stroke },
-                ]}
-              />
-              <View style={styles.section_logs_item}>
-                <Text>Douche • 10m</Text>
-                <Text>Salle de bain</Text>
-              </View>
-              <View
-                style={[
-                  styles.section_divider,
-                  { backgroundColor: theme.stroke },
-                ]}
-              />
-              <View style={styles.section_logs_item}>
-                <Text>Douche • 8m 32s</Text>
-                <Text>Salle de bain</Text>
-              </View>
-            </View>
-            {/* <FlatList
+            <FlatList
               style={[styles.section_main, { gap: 5 }]}
               data={data}
-              renderItem={({ item }) => <Text>{item.id}</Text>}
-            /> */}
+              renderItem={({ item, index }) => (
+                <LogsListItem
+                  key={index}
+                  item={item}
+                  sensor={
+                    sensors.filter(
+                      (item2: SensorProps) => item2.id == item.id
+                    )[0]
+                  }
+                />
+              )}
+              ItemSeparatorComponent={() => (
+                <View
+                  style={[
+                    styles.section_divider,
+                    { backgroundColor: theme.stroke },
+                  ]}
+                />
+              )}
+            />
           </View>
         );
         break;
@@ -348,7 +347,8 @@ export default function WidgetListItem(props: WidgetProps) {
   };
 
   return (
-    <View
+    <Pressable
+      onLongPress={() => Alert.alert("Supprimer le widget?")}
       style={[
         styles.item,
         {
@@ -358,7 +358,7 @@ export default function WidgetListItem(props: WidgetProps) {
       ]}
     >
       {renderContent()}
-    </View>
+    </Pressable>
   );
 }
 
@@ -392,11 +392,6 @@ const styles = StyleSheet.create({
 
   section_current_item: {
     gap: 2,
-  },
-
-  section_logs_item: {
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 
   section_header_title: {

@@ -63,6 +63,7 @@ const date_picker_mode_data = [
     name: "Jour",
     id: "single",
   },
+  { name: "Semaine", id: "week" },
   {
     name: "Mois",
     id: "month",
@@ -156,18 +157,6 @@ export default function ChartsScreen() {
       setConsumptionData(res);
       setLoading(false);
     });
-
-    // setConsumptionData({
-    //   data: [
-    //     { label: "Buanderie", value: 15 },
-    //     { label: "Salle de bain 4", value: 13 },
-    //     { label: "Salle de bain 1", value: 10 },
-    //     { label: "Salle de bain 2", value: 9 },
-    //     { label: "Salle de bain 3", value: 8 },
-    //   ],
-    //   total_volume: 22,
-    // });
-    // setLoading(false);
   }, [
     appliedDate,
     appliedMode,
@@ -239,6 +228,8 @@ export default function ChartsScreen() {
   };
 
   const handleSelectDate = (date_data: object | number) => {
+    console.log(selectedMode);
+    console.log(date_data);
     if (selectedMode == "single" && typeof date_data == "object") {
       const { date } = date_data;
       // console.log(date);
@@ -247,6 +238,9 @@ export default function ChartsScreen() {
       const { startDate, endDate } = date_data;
       setSelectedStartDate(startDate);
       setSelectedEndDate(endDate);
+    } else if (selectedMode == "week") {
+      // const setSelectedWeek()
+      console.log(date_data);
     } else if (selectedMode == "month" && typeof date_data == "number") {
       // Number == year || index of month (january = 0)
       const is_month = date_data >= 0 && date_data <= 11;
@@ -258,7 +252,6 @@ export default function ChartsScreen() {
         setSelectedYear(date_data);
       }
     } else if (selectedMode == "year" && typeof date_data == "number") {
-      // console.log(date_data);
       setSelectedYear(date_data);
     }
   };
@@ -293,6 +286,13 @@ export default function ChartsScreen() {
 
   const handleSelectMode = (mode: string) => {
     setSelectedMode(mode);
+  };
+
+  const week_selector_styles = () => {
+    if (selectedMode == "week") {
+      return {};
+    }
+    return {};
   };
 
   const month_selector_styles = () => {
@@ -728,6 +728,7 @@ export default function ChartsScreen() {
           selectedDate,
           selectedStartDate,
           selectedEndDate,
+          // selectedWeek,
           selectedYear,
           selectedMonth,
           selectedMode,
@@ -798,6 +799,7 @@ export default function ChartsScreen() {
               year: { ...styles.date_picker_item, borderColor: theme.stroke },
               month: { ...styles.date_picker_item, borderColor: theme.stroke },
               day: { ...styles.date_picker_item, borderColor: theme.stroke },
+              ...week_selector_styles(),
               ...month_selector_styles(),
               ...year_selector_styles(),
             }}

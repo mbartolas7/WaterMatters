@@ -97,6 +97,10 @@ const getChartData = async ({
         while (tempDate.isSameOrBefore(end)) {
           let key = "";
           switch (date_mode) {
+            case "week":
+              key = tempDate.format("WW-DD");
+              tempDate.add(1, "day");
+              break;
             case "month":
               key = tempDate.format("YYYY-[S]WW");
               tempDate.add(1, "week");
@@ -118,6 +122,9 @@ const getChartData = async ({
           let key = "";
 
           switch (date_mode) {
+            case "week":
+              key = item_date.format("WW-DD");
+              break;
             case "month":
               key = item_date.format("YYYY-[S]WW"); // Année ISO + numéro de semaine ISO
               break;
@@ -139,6 +146,9 @@ const getChartData = async ({
         result.data = Object.entries(aggregationMap).map(([label, value]) => {
           const formattedLabel = () => {
             switch (date_mode) {
+              case "week":
+                return moment(label, "WW-DD").format("DDDD");
+                break;
               case "month":
                 return moment(label, "YYYY-[S]WW").format("[S]WW");
                 break;

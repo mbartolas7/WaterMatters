@@ -48,7 +48,7 @@ export default function RunningDevicesListItem(
 
 const styles = StyleSheet.create({
   item: {
-    gap: 2,
+    // gap: 2,
   },
   item_text: {
     fontFamily: "Figtree-Medium",

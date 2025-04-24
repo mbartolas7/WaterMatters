@@ -1,12 +1,14 @@
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
+  useAnimatedValue,
   View,
 } from "react-native";
 import { BarChart, barDataItem, PieChart } from "react-native-gifted-charts";
@@ -70,6 +72,8 @@ export default function WidgetListItem(props: WidgetProps) {
   const [loading, setLoading] = useState<boolean>(true);
 
   const sensors = useSelector(getSensors);
+
+  const widget_opacity = useAnimatedValue(1);
 
   const chart_width =
     size == 2
@@ -163,6 +167,14 @@ export default function WidgetListItem(props: WidgetProps) {
     setLoading(false);
   };
 
+  const handleLongPress = () => {
+    // Animated.timing(widget_opacity, {
+    //   toValue: 0,
+
+    // })
+    Alert.alert("Supprimer le widget?");
+  };
+
   const renderContent = () => {
     if (loading || data == undefined) return <ActivityIndicator />;
 
@@ -200,6 +212,10 @@ export default function WidgetListItem(props: WidgetProps) {
                 endSpacing={5}
                 yAxisLabelSuffix="L"
                 maxValue={Math.max(...data.map((item) => item.value)) + 2}
+              />
+              <Pressable
+                style={styles.bar_chart_pressable}
+                onLongPress={handleLongPress}
               />
             </View>
           </View>
@@ -297,6 +313,7 @@ export default function WidgetListItem(props: WidgetProps) {
             <FlatList
               scrollEnabled={false}
               data={data}
+              style={[styles.section_main, { gap: 2 }]}
               renderItem={({ item, index }) => (
                 <RunningDevicesListItem
                   key={index}
@@ -317,7 +334,7 @@ export default function WidgetListItem(props: WidgetProps) {
                 />
               )}
             />
-            {dataLength > 3 && (
+            {dataLength !== undefined && dataLength > 3 && (
               <View style={styles.section_footer}>
                 <Text
                   style={[
@@ -342,7 +359,7 @@ export default function WidgetListItem(props: WidgetProps) {
               </Text>
             </View>
             <FlatList
-              style={[styles.section_main, { gap: 5 }]}
+              style={[styles.section_main, { gap: 3 }]}
               data={data}
               scrollEnabled={false}
               renderItem={({ item, index }) => (
@@ -375,18 +392,20 @@ export default function WidgetListItem(props: WidgetProps) {
   };
 
   return (
-    <Pressable
-      onLongPress={() => Alert.alert("Supprimer le widget?")}
-      style={[
-        styles.item,
-        {
-          backgroundColor: theme.light_text,
-          borderColor: theme.stroke,
-        },
-      ]}
-    >
-      {renderContent()}
-    </Pressable>
+    <Animated.View style={{ opacity: widget_opacity, flex: 1 }}>
+      <Pressable
+        onLongPress={handleLongPress}
+        style={[
+          styles.item,
+          {
+            backgroundColor: theme.light_text,
+            borderColor: theme.stroke,
+          },
+        ]}
+      >
+        {renderContent()}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -448,7 +467,7 @@ const styles = StyleSheet.create({
   section_divider: {
     height: 1,
     width: "100%",
-    marginTop: 3,
+    marginVertical: 5,
   },
 
   section_footer: {
@@ -469,6 +488,13 @@ const styles = StyleSheet.create({
   bar_chart: {
     width: "100%",
     paddingTop: 5,
+    position: "relative",
+  },
+
+  bar_chart_pressable: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
   },
 
   bar_chart_text: {

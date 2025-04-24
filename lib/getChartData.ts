@@ -33,10 +33,7 @@ interface SensorProps {
 }
 
 interface ResultProps {
-  data:
-    | UseProps[]
-    | { room: string; volume: number }[]
-    | { label: string | undefined; value: number }[];
+  data: UseProps[] | { label: string | undefined; value: number }[];
   total_volume: number;
 }
 
@@ -57,17 +54,20 @@ const getChartData = async ({
     .then((querySnapshot) => {
       querySnapshot.forEach((documentSnapshot) => {
         let doc_data = documentSnapshot.data() as Omit<UseProps, "key">;
-        const { begin_tp, end_tp } = doc_data;
-        doc_data.begin_tp = new Date(
-          begin_tp.seconds * 1000 + begin_tp.nanoseconds / 1_000_000
-        );
-        doc_data.end_tp = new Date(
-          end_tp.seconds * 1000 + end_tp.nanoseconds / 1_000_000
-        );
+        let { begin_tp, end_tp } = doc_data;
+        doc_data.begin_tp = begin_tp.toDate();
+        doc_data.end_tp = end_tp.toDate();
+        // doc_data.begin_tp = new Date(
+        //   begin_tp.seconds * 1000 + begin_tp.nanoseconds / 1_000_000
+        // );
+        // doc_data.end_tp = new Date(
+        //   end_tp.seconds * 1000 + end_tp.nanoseconds / 1_000_000
+        // );
 
         data.push({ ...doc_data, key: documentSnapshot.id });
       });
 
+      console.log("data: ");
       console.log(data);
     });
 
@@ -75,6 +75,7 @@ const getChartData = async ({
 
   let result = {
     total_volume: 0,
+    data: [],
   } as ResultProps;
 
   switch (type) {
@@ -87,18 +88,22 @@ const getChartData = async ({
         });
       } else {
         const start = moment(start_date).startOf(
-          date_mode == "month" ? "isoWeek" : "month"
+          date_mode == "month" || "week" ? "isoWeek" : "month"
         );
         const end = moment(end_date).endOf(
-          date_mode == "month" ? "isoWeek" : "month"
+          date_mode == "month" || "week" ? "isoWeek" : "month"
         );
         const tempDate = start.clone();
+
+        // console.log(start);
+        // console.log(end);
 
         while (tempDate.isSameOrBefore(end)) {
           let key = "";
           switch (date_mode) {
             case "week":
               key = tempDate.format("WW-DD");
+              // console.log(key);
               tempDate.add(1, "day");
               break;
             case "month":
@@ -116,6 +121,9 @@ const getChartData = async ({
           }
           aggregationMap[key] = 0;
         }
+
+        console.log("aggregation: ");
+        console.log(aggregationMap);
 
         data.forEach((item) => {
           const item_date = moment(item.begin_tp);
@@ -142,12 +150,15 @@ const getChartData = async ({
           aggregationMap[key] += item.volume;
         });
 
+        console.log("aggregation with volume: ");
+        console.log(aggregationMap);
+
         // Formatter les labels
         result.data = Object.entries(aggregationMap).map(([label, value]) => {
           const formattedLabel = () => {
             switch (date_mode) {
               case "week":
-                return moment(label, "WW-DD").format("DDDD");
+                return moment(label, "WW-DD").format("dddd")[0].toUpperCase();
                 break;
               case "month":
                 return moment(label, "YYYY-[S]WW").format("[S]WW");

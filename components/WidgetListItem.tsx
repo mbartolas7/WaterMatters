@@ -9,17 +9,20 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { BarChart, PieChart } from "react-native-gifted-charts";
+import { BarChart, barDataItem, PieChart } from "react-native-gifted-charts";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useEffect, useState } from "react";
 
-import firestore from "@react-native-firebase/firestore";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
 import moment from "moment";
 import LogsListItem from "./widgets/LogsListItem";
 import { useSelector } from "react-redux";
 import { getSensors } from "@/redux/slices/sensorsSlice";
 import getChartData from "@/lib/getChartData";
+import RunningDevicesListItem from "./widgets/RunningDevicesListItem";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
@@ -38,6 +41,21 @@ interface SensorProps {
   key: string;
 }
 
+interface UseProps {
+  begin_tp: FirebaseFirestoreTypes.Timestamp | Date;
+  end_tp: FirebaseFirestoreTypes.Timestamp | Date;
+  duration: number;
+  id: number;
+  running: boolean;
+  volume: number;
+  key: string;
+}
+
+interface BarChartDataProps {
+  label: string;
+  value: number;
+}
+
 const usesCollection = firestore().collection("uses");
 
 export default function WidgetListItem(props: WidgetProps) {
@@ -45,7 +63,10 @@ export default function WidgetListItem(props: WidgetProps) {
 
   const theme = useThemeColor();
 
-  const [data, setData] = useState();
+  const [data, setData] = useState<
+    UseProps[] | BarChartDataProps[] | barDataItem[] | undefined
+  >();
+  const [dataLength, setDataLength] = useState<number>();
   const [loading, setLoading] = useState<boolean>(true);
 
   const sensors = useSelector(getSensors);
@@ -54,17 +75,6 @@ export default function WidgetListItem(props: WidgetProps) {
     size == 2
       ? Dimensions.get("window").width - 30 - 30
       : (Dimensions.get("window").width - 30 - 10) / 2;
-
-  const bar_sample_data = [
-    { value: 98, label: "L" },
-    // { value: 500, label: "T", frontColor: "#177AD5" },
-    { value: 94, label: "M" },
-    { value: 95, label: "M" },
-    { value: 89, label: "J" },
-    { value: 101, label: "V" },
-    { value: 100, label: "S" },
-    { value: 92, label: "D" },
-  ];
 
   const pie_sample_data = [
     { value: 70, color: theme.tint },
@@ -101,11 +111,7 @@ export default function WidgetListItem(props: WidgetProps) {
               break;
           }
 
-          // Convertir les dates!
-          // begin_tp = firestore.Timestamp.fromDate(begin_tp);
-          // end_tp = firestore.Timestamp.fromDate(end_tp);
-
-          getChartData({
+          await getChartData({
             type: "global",
             start_date: begin_tp,
             end_date: end_tp,
@@ -113,26 +119,8 @@ export default function WidgetListItem(props: WidgetProps) {
             sensors: sensors,
           }).then((res) => {
             console.log(res);
-            // setData(res);
-            // setLoading(false);
+            setData(res.data);
           });
-          // await usesCollection
-          //   .where("begin_tp", ">=", begin_tp)
-          //   .where("begin_tp", "<=", end_tp)
-          //   .get()
-          //   .then((querySnapshot) => {
-          //     const uses_data = [];
-          //     querySnapshot.forEach((documentSnapshot) => {
-          //       const sensor = documentSnapshot.data() as Omit<
-          //         SensorProps,
-          //         "key"
-          //       >;
-          //       uses_data.push({ ...sensor, key: documentSnapshot.id });
-          //     });
-
-          //     setData(uses_data);
-          //   })
-          //   .catch((e) => console.log(e));
         }
         break;
       case "logs": {
@@ -141,19 +129,32 @@ export default function WidgetListItem(props: WidgetProps) {
           .orderBy("begin_tp", "desc")
           .get()
           .then((querySnapshot) => {
-            const uses_data = [];
+            const uses_data = [] as UseProps[];
             querySnapshot.forEach((documentSnapshot) => {
-              const sensor = documentSnapshot.data() as Omit<
-                SensorProps,
-                "key"
-              >;
-              uses_data.push({ ...sensor, key: documentSnapshot.id });
+              const use = documentSnapshot.data() as Omit<UseProps, "key">;
+              uses_data.push({ ...use, key: documentSnapshot.id });
             });
 
             console.log(uses_data);
             setData(uses_data);
           })
           .catch((e) => console.log(e));
+      }
+      case "current": {
+        await usesCollection
+          .where("running", "==", true)
+          .get()
+          .then((querySnapshot) => {
+            const uses_data = [] as UseProps[];
+            querySnapshot.forEach((documentSnapshot) => {
+              const use = documentSnapshot.data() as Omit<UseProps, "key">;
+              uses_data.push({ ...use, key: documentSnapshot.id });
+            });
+
+            console.log(uses_data);
+            setDataLength(uses_data.length);
+            setData(uses_data.slice(0, 3));
+          });
       }
       default:
         break;
@@ -163,7 +164,7 @@ export default function WidgetListItem(props: WidgetProps) {
   };
 
   const renderContent = () => {
-    if (loading) return <ActivityIndicator />;
+    if (loading || data == undefined) return <ActivityIndicator />;
 
     switch (type) {
       case "chart":
@@ -182,7 +183,7 @@ export default function WidgetListItem(props: WidgetProps) {
                 barWidth={20}
                 height={chart_width / 2.2}
                 // 40 = estimated yAxisValues width + charts padding ; 20 = barWidth
-                spacing={(chart_width - 50) / bar_sample_data.length - 20}
+                spacing={(chart_width - 50) / data.length - 20}
                 yAxisLabelWidth={40}
                 yAxisTextStyle={[
                   styles.bar_chart_text,
@@ -198,6 +199,7 @@ export default function WidgetListItem(props: WidgetProps) {
                 initialSpacing={10}
                 endSpacing={5}
                 yAxisLabelSuffix="L"
+                maxValue={Math.max(...data.map((item) => item.value)) + 2}
               />
             </View>
           </View>
@@ -258,7 +260,7 @@ export default function WidgetListItem(props: WidgetProps) {
                 ]}
               />
             </View>
-            <View style={styles.section_main}>
+            {/* <View style={styles.section_main}>
               <View style={styles.section_current_item}>
                 <Text style={[styles.section_text, { color: theme.dark_text }]}>
                   Évier
@@ -291,17 +293,42 @@ export default function WidgetListItem(props: WidgetProps) {
                   Salle de bain
                 </Text>
               </View>
-            </View>
-            <View style={styles.section_footer}>
-              <Text
-                style={[
-                  styles.section_footer_text_2,
-                  { color: theme.dark_text },
-                ]}
-              >
-                +3 appareils
-              </Text>
-            </View>
+            </View> */}
+            <FlatList
+              scrollEnabled={false}
+              data={data}
+              renderItem={({ item, index }) => (
+                <RunningDevicesListItem
+                  key={index}
+                  item={item}
+                  sensor={
+                    sensors.filter(
+                      (item2: SensorProps) => item2.id == item.id
+                    )[0]
+                  }
+                />
+              )}
+              ItemSeparatorComponent={() => (
+                <View
+                  style={[
+                    styles.section_divider,
+                    { backgroundColor: theme.stroke },
+                  ]}
+                />
+              )}
+            />
+            {dataLength > 3 && (
+              <View style={styles.section_footer}>
+                <Text
+                  style={[
+                    styles.section_footer_text_2,
+                    { color: theme.dark_text },
+                  ]}
+                >
+                  +{dataLength - 3} appareils
+                </Text>
+              </View>
+            )}
           </View>
         );
         break;
@@ -317,6 +344,7 @@ export default function WidgetListItem(props: WidgetProps) {
             <FlatList
               style={[styles.section_main, { gap: 5 }]}
               data={data}
+              scrollEnabled={false}
               renderItem={({ item, index }) => (
                 <LogsListItem
                   key={index}

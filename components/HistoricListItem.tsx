@@ -2,6 +2,7 @@ import { Text, View, StyleSheet } from "react-native";
 import moment from "moment";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useEffect } from "react";
 
 interface SensorProps {
   name: string;
@@ -29,7 +30,6 @@ export default function HistoricListItem({
   sensor,
 }: HistoricProps) {
   const { id, begin_tp, end_tp, volume, duration } = item;
-  const { name, room } = sensor;
 
   const theme = useThemeColor();
 
@@ -40,6 +40,10 @@ export default function HistoricListItem({
     }
     return text;
   };
+
+  if (sensor == undefined) return <></>;
+
+  const { name, room } = sensor;
 
   return (
     <View style={styles.item}>

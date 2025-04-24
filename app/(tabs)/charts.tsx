@@ -63,7 +63,7 @@ const date_picker_mode_data = [
     name: "Jour",
     id: "single",
   },
-  { name: "Semaine", id: "week" },
+  // { name: "Semaine", id: "week" },
   {
     name: "Mois",
     id: "month",
@@ -238,10 +238,12 @@ export default function ChartsScreen() {
       const { startDate, endDate } = date_data;
       setSelectedStartDate(startDate);
       setSelectedEndDate(endDate);
-    } else if (selectedMode == "week") {
-      // const setSelectedWeek()
-      console.log(date_data);
-    } else if (selectedMode == "month" && typeof date_data == "number") {
+    }
+    // else if (selectedMode == "week") {
+    // const setSelectedWeek()
+    // console.log(date_data);
+    // }
+    else if (selectedMode == "month" && typeof date_data == "number") {
       // Number == year || index of month (january = 0)
       const is_month = date_data >= 0 && date_data <= 11;
       const is_year = date_data > 11;

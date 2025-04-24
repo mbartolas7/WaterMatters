@@ -163,7 +163,8 @@ export default function HomeScreen() {
           }}
           // Horizontal gap
           columnWrapperStyle={{ gap: 10 }}
-          data={widgets}
+          // data={widgets}
+          data={widgets.slice(3, 4)}
           numColumns={2}
           style={[styles.main, { paddingTop: headerHeight }]}
           renderItem={({ item, index }) =>

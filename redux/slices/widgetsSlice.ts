@@ -27,7 +27,10 @@ export const widgetsSlice = createSlice({
       size: 1,
       type: "current",
     },
-    { size: 0 },
+    {
+      size: 1,
+      type: "current",
+    },
     {
       size: 2,
       type: "logs",

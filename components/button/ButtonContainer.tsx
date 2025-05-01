@@ -10,6 +10,7 @@ interface ButtonContainerProps {
 export default function ButtonContainer({
   children,
   action,
+  ...restProps
 }: ButtonContainerProps) {
   const button_scale = useAnimatedValue(1);
 
@@ -34,6 +35,7 @@ export default function ButtonContainer({
       onPress={action}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      {...restProps}
     >
       <Animated.View style={{ transform: [{ scale: button_scale }] }}>
         {children}

@@ -227,8 +227,11 @@ const styles = StyleSheet.create({
   },
 
   main: {
-    width: "100%",
+    // width: "100%",
+    width: Dimensions.get("window").width - 15,
     marginTop: 15,
+    marginLeft: -15,
+    paddingLeft: 15,
   },
 
   button: {

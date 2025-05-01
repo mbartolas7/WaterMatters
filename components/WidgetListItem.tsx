@@ -21,10 +21,12 @@ import firestore, {
 } from "@react-native-firebase/firestore";
 import moment from "moment";
 import LogsListItem from "./widgets/LogsListItem";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getSensors } from "@/redux/slices/sensorsSlice";
 import getChartData from "@/lib/getChartData";
 import RunningDevicesListItem from "./widgets/RunningDevicesListItem";
+import * as Haptics from "expo-haptics";
+import { removeWidget } from "@/redux/slices/widgetsSlice";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
@@ -73,7 +75,9 @@ export default function WidgetListItem(props: WidgetProps) {
 
   const sensors = useSelector(getSensors);
 
-  const widget_opacity = useAnimatedValue(1);
+  const widget_scale = useAnimatedValue(1);
+
+  const dispatch = useDispatch();
 
   const chart_width =
     size == 2
@@ -86,7 +90,7 @@ export default function WidgetListItem(props: WidgetProps) {
   ];
 
   useEffect(() => {
-    getData();
+    // getData();
   }, []);
 
   const getData = async () => {
@@ -167,12 +171,35 @@ export default function WidgetListItem(props: WidgetProps) {
     setLoading(false);
   };
 
-  const handleLongPress = () => {
-    // Animated.timing(widget_opacity, {
-    //   toValue: 0,
+  const handlePressIn = () => {
+    Animated.spring(widget_scale, {
+      toValue: 1.05,
+      useNativeDriver: true,
+    }).start();
 
-    // })
-    Alert.alert("Supprimer le widget?");
+    Haptics.selectionAsync();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(widget_scale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleLongPress = () => {
+    Alert.alert("Alerte", "Voulez-vous supprimer ce widget ?", [
+      {
+        text: "Supprimer",
+        onPress: () => dispatch(removeWidget(id)),
+        style: "destructive",
+      },
+      {
+        text: "Annuler",
+        onPress: () => null,
+        style: "cancel",
+      },
+    ]);
   };
 
   const renderContent = () => {
@@ -215,6 +242,8 @@ export default function WidgetListItem(props: WidgetProps) {
               />
               <Pressable
                 style={styles.bar_chart_pressable}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
                 onLongPress={handleLongPress}
               />
             </View>
@@ -392,9 +421,17 @@ export default function WidgetListItem(props: WidgetProps) {
   };
 
   return (
-    <Animated.View style={{ opacity: widget_opacity, flex: 1 }}>
+    <Animated.View
+      style={{
+        transform: [{ scale: widget_scale }],
+        flex: size == 1 ? 0.5 : 1,
+        // flex: 1,
+      }}
+    >
       <Pressable
+        onPressIn={handlePressIn}
         onLongPress={handleLongPress}
+        onPressOut={handlePressOut}
         style={[
           styles.item,
           {

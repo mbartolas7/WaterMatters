@@ -1,6 +1,8 @@
 import WidgetListItem from "@/components/WidgetListItem";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { getAllAvailableWidgets } from "@/redux/slices/widgetsSlice";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -8,9 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSelector } from "react-redux";
 
 export default function Modal() {
   const theme = useThemeColor();
+
+  const all_available_widgets = useSelector(getAllAvailableWidgets);
+
+  useEffect(() => console.log(all_available_widgets), []);
 
   const widgets = [
     {
@@ -77,7 +84,9 @@ export default function Modal() {
       </View>
       <FlatList
         style={styles.list}
-        data={widgets}
+        data={all_available_widgets.filter(
+          (item) => widgets.findIndex((item2) => item2.type == item.type) == -1
+        )}
         showsVerticalScrollIndicator={false}
         // Vertical gap
         contentContainerStyle={{ gap: 10, paddingTop: 10, paddingBottom: 30 }}

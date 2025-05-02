@@ -370,7 +370,6 @@ export default function ChartsScreen() {
               <View style={{ marginTop: 5 }}>
                 {/* <Text></Text> */}
                 <BarChart
-                  // data={bar_sample_data}
                   data={consumptionData.data}
                   frontColor={theme.tint}
                   yAxisThickness={0}

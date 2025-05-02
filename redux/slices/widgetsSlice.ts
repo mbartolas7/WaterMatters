@@ -15,31 +15,37 @@ interface WidgetProps {
 export const widgetsSlice = createSlice({
   name: "widgets",
   initialState: [
-    {
-      size: 2,
-      type: "chart",
-      config: {
-        mode: "week",
-      },
-      id: 0,
-    },
-    { size: 0 },
-    {
-      size: 1,
-      type: "current",
-      id: 1,
-    },
-    {
-      size: 1,
-      type: "current",
-      id: 2,
-    },
-    {
-      size: 2,
-      type: "logs",
-      id: 3,
-    },
-    { size: 0 },
+    // {
+    //   size: 2,
+    //   type: "chart",
+    //   config: {
+    //     mode: "week",
+    //   },
+    //   id: 0,
+    // },
+    // { size: 0 },
+    // {
+    //   size: 1,
+    //   type: "current",
+    //   id: 1,
+    // },
+    // {
+    //   size: 1,
+    //   type: "current",
+    //   id: 2,
+    // },
+    // {
+    //   size: 2,
+    //   type: "logs",
+    //   id: 3,
+    // },
+    // { size: 0 },
+    // {
+    //   size: 2,
+    //   type: "goal",
+    //   id: 4,
+    // },
+    // { size: 0 },
   ] as WidgetProps[],
   reducers: {
     setWidgets: (state: WidgetProps[], action) => {
@@ -116,12 +122,12 @@ export const getAllAvailableWidgets = () => {
       },
     },
     {
-      size: 1,
-      type: "current",
-    },
-    {
       size: 2,
       type: "logs",
+    },
+    {
+      size: 1,
+      type: "current",
     },
     {
       size: 1,

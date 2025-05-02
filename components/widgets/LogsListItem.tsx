@@ -5,8 +5,8 @@ import { StyleSheet, Text, View } from "react-native";
 interface SensorProps {
   name: string;
   room: string;
-  id: number;
-  key: string;
+  id?: number;
+  key?: string;
 }
 
 interface UseProps {

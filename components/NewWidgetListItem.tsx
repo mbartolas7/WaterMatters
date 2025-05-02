@@ -1,6 +1,4 @@
 import {
-  ActivityIndicator,
-  Alert,
   Animated,
   Dimensions,
   FlatList,
@@ -10,22 +8,22 @@ import {
   useAnimatedValue,
   View,
 } from "react-native";
-import { BarChart, barDataItem, PieChart } from "react-native-gifted-charts";
+import { BarChart, PieChart } from "react-native-gifted-charts";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useEffect, useState } from "react";
 
-import firestore, {
-  FirebaseFirestoreTypes,
-} from "@react-native-firebase/firestore";
-import moment from "moment";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import LogsListItem from "./widgets/LogsListItem";
 import { useDispatch, useSelector } from "react-redux";
 import { getSensors } from "@/redux/slices/sensorsSlice";
-import getChartData from "@/lib/getChartData";
 import RunningDevicesListItem from "./widgets/RunningDevicesListItem";
 import * as Haptics from "expo-haptics";
-import { removeWidget } from "@/redux/slices/widgetsSlice";
+import {
+  bar_sample_data,
+  current_sample_data,
+  logs_sample_data,
+  pie_sample_data,
+} from "@/lib/getSampleData";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
@@ -37,42 +35,10 @@ interface WidgetProps {
   id: number;
 }
 
-interface SensorProps {
-  name: string;
-  room: string;
-  id: number;
-  key: string;
-}
-
-interface UseProps {
-  begin_tp: FirebaseFirestoreTypes.Timestamp | Date;
-  end_tp: FirebaseFirestoreTypes.Timestamp | Date;
-  duration: number;
-  id: number;
-  running: boolean;
-  volume: number;
-  key: string;
-}
-
-interface BarChartDataProps {
-  label: string;
-  value: number;
-}
-
-const usesCollection = firestore().collection("uses");
-
-export default function WidgetListItem(props: WidgetProps) {
+export default function NewWidgetListItem(props: WidgetProps) {
   const { size, type, config, id } = props;
 
   const theme = useThemeColor();
-
-  const [data, setData] = useState<
-    UseProps[] | BarChartDataProps[] | barDataItem[] | undefined
-  >();
-  const [dataLength, setDataLength] = useState<number>();
-  const [loading, setLoading] = useState<boolean>(true);
-
-  const sensors = useSelector(getSensors);
 
   const widget_scale = useAnimatedValue(1);
 
@@ -82,93 +48,6 @@ export default function WidgetListItem(props: WidgetProps) {
     size == 2
       ? Dimensions.get("window").width - 30 - 30
       : (Dimensions.get("window").width - 30 - 10) / 2;
-
-  const pie_sample_data = [
-    { value: 70, color: theme.tint },
-    { value: 30, color: theme.light_bg },
-  ];
-
-  useEffect(() => {
-    getData();
-  }, []);
-
-  const getData = async () => {
-    switch (type) {
-      case "chart":
-        {
-          let begin_tp;
-          let end_tp = new Date();
-
-          switch (config?.mode) {
-            case "week":
-              begin_tp = moment()
-                .local()
-                .startOf("isoWeek")
-                .startOf("day")
-                .toDate();
-              break;
-            case "month":
-              begin_tp = moment()
-                .startOf("month")
-                .add(1, "day")
-                .startOf("day")
-                .toDate();
-              break;
-            default:
-              break;
-          }
-
-          await getChartData({
-            type: "global",
-            start_date: begin_tp,
-            end_date: end_tp,
-            date_mode: "week",
-            sensors: sensors,
-          }).then((res) => {
-            console.log(res);
-            setData(res.data);
-          });
-        }
-        break;
-      case "logs": {
-        await usesCollection
-          .limit(4)
-          .orderBy("begin_tp", "desc")
-          .get()
-          .then((querySnapshot) => {
-            const uses_data = [] as UseProps[];
-            querySnapshot.forEach((documentSnapshot) => {
-              const use = documentSnapshot.data() as Omit<UseProps, "key">;
-              uses_data.push({ ...use, key: documentSnapshot.id });
-            });
-
-            console.log(uses_data);
-            setData(uses_data);
-          })
-          .catch((e) => console.log(e));
-      }
-      case "current": {
-        await usesCollection
-          .where("running", "==", true)
-          .get()
-          .then((querySnapshot) => {
-            const uses_data = [] as UseProps[];
-            querySnapshot.forEach((documentSnapshot) => {
-              const use = documentSnapshot.data() as Omit<UseProps, "key">;
-              uses_data.push({ ...use, key: documentSnapshot.id });
-            });
-
-            console.log(uses_data);
-            setDataLength(uses_data.length);
-            setData(uses_data.slice(0, 2));
-          });
-      }
-      default:
-        break;
-    }
-
-    setLoading(false);
-  };
 
   const handlePressIn = () => {
     Animated.spring(widget_scale, {
@@ -186,24 +65,7 @@ export default function WidgetListItem(props: WidgetProps) {
     }).start();
   };
 
-  const handleLongPress = () => {
-    Alert.alert("Alerte", "Voulez-vous supprimer ce widget ?", [
-      {
-        text: "Supprimer",
-        onPress: () => dispatch(removeWidget(id)),
-        style: "destructive",
-      },
-      {
-        text: "Annuler",
-        onPress: () => null,
-        style: "cancel",
-      },
-    ]);
-  };
-
   const renderContent = () => {
-    if (loading || data == undefined) return <ActivityIndicator />;
-
     switch (type) {
       case "chart":
         return (
@@ -213,7 +75,7 @@ export default function WidgetListItem(props: WidgetProps) {
             </View>
             <View style={styles.bar_chart}>
               <BarChart
-                data={data}
+                data={bar_sample_data}
                 frontColor={theme.tint}
                 yAxisThickness={0}
                 xAxisThickness={0}
@@ -221,7 +83,7 @@ export default function WidgetListItem(props: WidgetProps) {
                 barWidth={20}
                 height={chart_width / 2.2}
                 // 40 = estimated yAxisValues width + charts padding ; 20 = barWidth
-                spacing={(chart_width - 50) / data.length - 20}
+                spacing={(chart_width - 50) / bar_sample_data.length - 20}
                 yAxisLabelWidth={40}
                 yAxisTextStyle={[
                   styles.bar_chart_text,
@@ -237,13 +99,14 @@ export default function WidgetListItem(props: WidgetProps) {
                 initialSpacing={10}
                 endSpacing={5}
                 yAxisLabelSuffix="L"
-                maxValue={Math.max(...data.map((item) => item.value)) + 2}
+                maxValue={
+                  Math.max(...bar_sample_data.map((item) => item.value)) + 2
+                }
               />
               <Pressable
                 style={styles.bar_chart_pressable}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
-                onLongPress={handleLongPress}
               />
             </View>
           </View>
@@ -254,16 +117,14 @@ export default function WidgetListItem(props: WidgetProps) {
         return (
           <View style={styles.section}>
             <View style={styles.section_header}>
-              {config?.id && (
-                <Text
-                  style={[
-                    styles.section_header_title,
-                    { color: theme.dark_text },
-                  ]}
-                >
-                  Objectif sur {config.id == 1 ? "Douche" : "Lavabos"} :
-                </Text>
-              )}
+              <Text
+                style={[
+                  styles.section_header_title,
+                  { color: theme.dark_text },
+                ]}
+              >
+                Objectif de conso. :
+              </Text>
               <PieChart
                 data={pie_sample_data}
                 innerRadius={radius - 7}
@@ -277,8 +138,7 @@ export default function WidgetListItem(props: WidgetProps) {
             </View>
             <View style={styles.section_main}>
               <Text style={styles.section_text}>
-                Attention, vous avez déjà consommé 9,2 litres. Il vous reste 5
-                jours !
+                Ajoutez un objectif de consommation sur un appareil
               </Text>
             </View>
             <View style={styles.section_footer}>
@@ -306,17 +166,13 @@ export default function WidgetListItem(props: WidgetProps) {
             </View>
             <FlatList
               scrollEnabled={false}
-              data={data}
+              data={current_sample_data}
               style={[styles.section_main, { gap: 2 }]}
               renderItem={({ item, index }) => (
                 <RunningDevicesListItem
                   key={index}
                   item={item}
-                  sensor={
-                    sensors.filter(
-                      (item2: SensorProps) => item2.id == item.id
-                    )[0]
-                  }
+                  sensor={{ name: item.name, room: item.room }}
                 />
               )}
               ItemSeparatorComponent={() => (
@@ -328,18 +184,16 @@ export default function WidgetListItem(props: WidgetProps) {
                 />
               )}
             />
-            {dataLength !== undefined && dataLength > 3 && (
-              <View style={styles.section_footer}>
-                <Text
-                  style={[
-                    styles.section_footer_text_2,
-                    { color: theme.dark_text },
-                  ]}
-                >
-                  +{dataLength - 2} appareils
-                </Text>
-              </View>
-            )}
+            <View style={styles.section_footer}>
+              <Text
+                style={[
+                  styles.section_footer_text_2,
+                  { color: theme.dark_text },
+                ]}
+              >
+                +2 appareils
+              </Text>
+            </View>
           </View>
         );
         break;
@@ -354,17 +208,13 @@ export default function WidgetListItem(props: WidgetProps) {
             </View>
             <FlatList
               style={[styles.section_main, { gap: 3 }]}
-              data={data}
+              data={logs_sample_data}
               scrollEnabled={false}
               renderItem={({ item, index }) => (
                 <LogsListItem
                   key={index}
                   item={item}
-                  sensor={
-                    sensors.filter(
-                      (item2: SensorProps) => item2.id == item.id
-                    )[0]
-                  }
+                  sensor={{ name: item.name, room: item.room }}
                 />
               )}
               ItemSeparatorComponent={() => (
@@ -395,7 +245,6 @@ export default function WidgetListItem(props: WidgetProps) {
     >
       <Pressable
         onPressIn={handlePressIn}
-        onLongPress={handleLongPress}
         onPressOut={handlePressOut}
         style={[
           styles.item,

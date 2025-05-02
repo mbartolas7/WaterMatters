@@ -1,8 +1,14 @@
+import NewWidgetListItem from "@/components/NewWidgetListItem";
 import WidgetListItem from "@/components/WidgetListItem";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { getAllAvailableWidgets } from "@/redux/slices/widgetsSlice";
+import setWidgetsData from "@/lib/setWidgetsData";
+import {
+  getAllAvailableWidgets,
+  getWidgets,
+} from "@/redux/slices/widgetsSlice";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { Info } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -12,55 +18,43 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 
+interface WidgetProps {
+  name?: string;
+  room?: string;
+  id?: number;
+  key?: string;
+  size: number;
+  type?: string;
+  config?: {
+    mode?: string;
+  };
+}
+
 export default function Modal() {
   const theme = useThemeColor();
 
   const all_available_widgets = useSelector(getAllAvailableWidgets);
+  const widgets = useSelector(getWidgets);
 
-  useEffect(() => console.log(all_available_widgets), []);
+  const [data, setData] = useState<WidgetProps[]>();
 
-  const widgets = [
-    {
-      size: 2,
-      type: "chart",
-      config: {},
-    },
-    { size: 0 },
-    {
-      size: 1,
-      type: "goal",
-      config: {},
-    },
-    {
-      size: 1,
-      type: "current",
-    },
-    {
-      size: 2,
-      type: "logs",
-    },
-    { size: 0 },
-    {
-      size: 2,
-      type: "logs",
-    },
-    { size: 0 },
-    {
-      size: 2,
-      type: "logs",
-    },
-    { size: 0 },
-    {
-      size: 1,
-      type: "goal",
-      config: {},
-    },
-    { size: 0 },
-    {
-      size: 2,
-      type: "logs",
-    },
-  ] as const;
+  useEffect(() => {
+    getData();
+  }, [all_available_widgets]);
+
+  const getData = () => {
+    const not_formatted_data = all_available_widgets.filter(
+      (item) =>
+        item.type == "goal" ||
+        !widgets.some((item2: WidgetProps) => item2.type == item.type)
+    ) as WidgetProps[];
+
+    const formatted_data = setWidgetsData(not_formatted_data);
+
+    console.log(formatted_data);
+
+    setData(formatted_data);
+  };
 
   const handleCancel = () => {
     router.back();
@@ -69,6 +63,21 @@ export default function Modal() {
   const handleSave = () => {
     router.back();
   };
+
+  const info_widget = () => (
+    <View
+      style={[
+        styles.info_widget,
+        { backgroundColor: theme.bg, borderColor: theme.stroke },
+      ]}
+    >
+      <Info color={theme.dark_text} />
+      <Text style={[styles.info_widget_text, { color: theme.dark_text }]}>
+        TTT uy huiiu uh h hu i hu uhuh hui iuh hi hu h h h uh uiih h hu h iu h
+        iu huh iuh u hi
+      </Text>
+    </View>
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.light_bg }]}>
@@ -84,19 +93,18 @@ export default function Modal() {
       </View>
       <FlatList
         style={styles.list}
-        data={all_available_widgets.filter(
-          (item) => widgets.findIndex((item2) => item2.type == item.type) == -1
-        )}
+        data={data}
         showsVerticalScrollIndicator={false}
         // Vertical gap
         contentContainerStyle={{ gap: 10, paddingTop: 10, paddingBottom: 30 }}
         // Horizontal gap
         columnWrapperStyle={{ gap: 10 }}
         numColumns={2}
-        renderItem={({ item, index }) => {
+        ListHeaderComponent={() => info_widget()}
+        renderItem={({ item, index }: { index: number; item: WidgetProps }) => {
           if (item.size == 0) return <></>;
 
-          return <WidgetListItem key={index} {...item} />;
+          return <NewWidgetListItem key={index} {...item} />;
         }}
       />
     </View>
@@ -131,7 +139,23 @@ const styles = StyleSheet.create({
   },
 
   list: {
-    // flex: 1,
     width: "100%",
+  },
+
+  info_widget: {
+    width: "100%",
+    borderWidth: 2,
+    borderRadius: 15,
+    flex: 1,
+    alignItems: "flex-start",
+    padding: 15,
+    flexDirection: "row",
+    gap: 10,
+  },
+  info_widget_text: {
+    flex: 1,
+    fontFamily: "Figtree-Regular",
+    fontSize: 16,
+    letterSpacing: -0.4,
   },
 });

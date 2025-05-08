@@ -59,6 +59,14 @@ export default function RootLayout() {
                     headerShown: false,
                   }}
                 />
+                <Stack.Screen
+                  name="custom-widget-modal"
+                  options={{
+                    presentation: "card", // ⬅️ évite le "slide from bottom"
+                    animation: "slide_from_right", // ⬅️ anime horizontalement
+                    headerShown: false,
+                  }}
+                />
               </Stack>
               <StatusBar style="auto" />
             </ShowBottomTabProvider>

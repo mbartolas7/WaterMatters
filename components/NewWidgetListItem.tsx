@@ -12,10 +12,8 @@ import { BarChart, PieChart } from "react-native-gifted-charts";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import LogsListItem from "./widgets/LogsListItem";
-import { useDispatch, useSelector } from "react-redux";
-import { getSensors } from "@/redux/slices/sensorsSlice";
+import { useDispatch } from "react-redux";
 import RunningDevicesListItem from "./widgets/RunningDevicesListItem";
 import * as Haptics from "expo-haptics";
 import {
@@ -24,6 +22,7 @@ import {
   logs_sample_data,
   pie_sample_data,
 } from "@/lib/getSampleData";
+import { useRouter } from "expo-router";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
@@ -44,6 +43,8 @@ export default function NewWidgetListItem(props: WidgetProps) {
 
   const dispatch = useDispatch();
 
+  const router = useRouter();
+
   const chart_width =
     size == 2
       ? Dimensions.get("window").width - 30 - 30
@@ -51,7 +52,7 @@ export default function NewWidgetListItem(props: WidgetProps) {
 
   const handlePressIn = () => {
     Animated.spring(widget_scale, {
-      toValue: 1.05,
+      toValue: 1.02,
       useNativeDriver: true,
     }).start();
 
@@ -63,6 +64,10 @@ export default function NewWidgetListItem(props: WidgetProps) {
       toValue: 1,
       useNativeDriver: true,
     }).start();
+  };
+
+  const handlePress = () => {
+    router.navigate("custom-widget-modal");
   };
 
   const renderContent = () => {
@@ -107,6 +112,7 @@ export default function NewWidgetListItem(props: WidgetProps) {
                 style={styles.bar_chart_pressable}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
+                onPress={handlePress}
               />
             </View>
           </View>
@@ -246,6 +252,7 @@ export default function NewWidgetListItem(props: WidgetProps) {
       <Pressable
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        onPress={handlePress}
         style={[
           styles.item,
           {

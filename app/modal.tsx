@@ -73,8 +73,8 @@ export default function Modal() {
     >
       <Info color={theme.dark_text} />
       <Text style={[styles.info_widget_text, { color: theme.dark_text }]}>
-        TTT uy huiiu uh h hu i hu uhuh hui iuh hi hu h h h uh uiih h hu h iu h
-        iu huh iuh u hi
+        Cliquez sur un exemple de widget pour le personnaliser et l'ajouter à
+        votre écran d'accueil !
       </Text>
     </View>
   );
@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 10,
-    paddingHorizontal: 15,
   },
 
   header: {
@@ -140,6 +139,7 @@ const styles = StyleSheet.create({
 
   list: {
     width: "100%",
+    paddingHorizontal: 15,
   },
 
   info_widget: {

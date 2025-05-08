@@ -447,14 +447,19 @@ export default function WidgetListItem({
 
       case "logs":
         return (
-          <View style={[styles.section, { gap: 10 }]}>
+          <View
+            style={[styles.section, { gap: 10, flex: flex_container ? 1 : 0 }]}
+          >
             <View style={styles.section_header}>
               <Text style={styles.section_header_title}>
                 Dernières utilisations :
               </Text>
             </View>
             <FlatList
-              style={[styles.section_main, { gap: 3 }]}
+              style={[
+                styles.section_main,
+                { gap: 3, flex: flex_container ? 1 : 0 },
+              ]}
               data={data}
               scrollEnabled={false}
               renderItem={({ item, index }) => (
@@ -517,7 +522,6 @@ const styles = StyleSheet.create({
   item: {
     borderWidth: 2,
     borderRadius: 15,
-    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 15,
@@ -525,7 +529,6 @@ const styles = StyleSheet.create({
   },
 
   section: {
-    // flex: 1,
     gap: 8,
     width: "100%",
   },
@@ -538,7 +541,6 @@ const styles = StyleSheet.create({
   },
 
   section_main: {
-    // flex: 1,
     gap: 2,
   },
 

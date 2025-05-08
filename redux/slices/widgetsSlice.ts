@@ -55,8 +55,6 @@ export const widgetsSlice = createSlice({
       const id = action.payload;
       let widget_index = state.findIndex((item) => item.id == id);
 
-      console.log(state[widget_index]);
-
       const { size } = state[widget_index];
 
       let next_state = state;
@@ -98,12 +96,46 @@ export const widgetsSlice = createSlice({
           next_state[widget_index] = { size: 0 };
         }
       }
-      console.log(next_state);
-
       return next_state;
     },
     addWidget: (state: WidgetProps[], action) => {
-      return state.push(action.payload);
+      let item = action.payload;
+
+      if (
+        item.config.from !== undefined ||
+        item.config.deadline !== undefined
+      ) {
+        if (typeof item.config.from !== "string") {
+          item.config.from = item.config.from.toISOString();
+        }
+
+        if (typeof item.config.deadline !== "string") {
+          item.config.deadline = item.config.deadline.toISOString();
+        }
+      }
+
+      // ATTENTION : ici élém. pas encore ajouté, donc state.length - 1 = l'élément avant celui que l'on va ajouter !!
+
+      if (state.length >= 2) {
+        if (
+          item.size == 1 &&
+          state[state.length - 1].size == 0 &&
+          state[state.length - 2].size == 1
+        ) {
+          state.pop();
+        }
+      }
+
+      state.push(item);
+
+      // ATTENTION : ici élém. déjà ajouté, donc state.length - 1 = l'élément ajouté !!
+
+      if (item.size == 2) {
+        state.push({ size: 0 });
+      } else if ((state.length - 1) % 2 == 0) {
+        // Nombre pair -> donc nouveau widget size = 1 dans colonne de gauche, ajouter un size = 0 à droite tant qu'un nouveau size = 1 ne revient pas direct
+        state.push({ size: 0 });
+      }
     },
   },
 });

@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 
 import firestore, {
   FirebaseFirestoreTypes,
+  Timestamp,
 } from "@react-native-firebase/firestore";
 import moment from "moment";
 import LogsListItem from "./widgets/LogsListItem";
@@ -26,15 +27,25 @@ import getChartData from "@/lib/getChartData";
 import RunningDevicesListItem from "./widgets/RunningDevicesListItem";
 import * as Haptics from "expo-haptics";
 import { removeWidget } from "@/redux/slices/widgetsSlice";
+import { X } from "lucide-react-native";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
   //   size: number;
   type: "chart" | "goal" | "current" | "logs";
   //   type: string;
-  config?: { id?: number; mode: string };
+  config?: {
+    id?: number;
+    mode: string;
+    from?: string;
+    deadline?: string;
+    sensor?: number;
+    limit?: number;
+  };
   key: number;
   id: number;
+
+  flex_container: boolean;
 }
 
 interface SensorProps {
@@ -61,13 +72,16 @@ interface BarChartDataProps {
 
 const usesCollection = firestore().collection("uses");
 
-export default function WidgetListItem(props: WidgetProps) {
+export default function WidgetListItem({
+  flex_container = true,
+  ...props
+}: WidgetProps) {
   const { size, type, config, id } = props;
 
   const theme = useThemeColor();
 
   const [data, setData] = useState<
-    UseProps[] | BarChartDataProps[] | barDataItem[] | undefined
+    UseProps[] | BarChartDataProps[] | barDataItem[] | number | undefined
   >();
   const [dataLength, setDataLength] = useState<number>();
   const [loading, setLoading] = useState<boolean>(true);
@@ -124,10 +138,12 @@ export default function WidgetListItem(props: WidgetProps) {
             end_date: end_tp,
             date_mode: "week",
             sensors: sensors,
-          }).then((res) => {
-            console.log(res);
-            setData(res.data);
-          });
+          })
+            .then((res) => {
+              console.log(res);
+              setData(res.data);
+            })
+            .catch((e) => console.log(e));
         }
         break;
       case "logs": {
@@ -146,6 +162,7 @@ export default function WidgetListItem(props: WidgetProps) {
             setData(uses_data);
           })
           .catch((e) => console.log(e));
+        break;
       }
       case "current": {
         await usesCollection
@@ -162,6 +179,38 @@ export default function WidgetListItem(props: WidgetProps) {
             setDataLength(uses_data.length);
             setData(uses_data.slice(0, 2));
           });
+        break;
+      }
+      case "goal": {
+        await usesCollection
+          .where("id", "==", config?.sensor)
+          .where("begin_tp", ">=", Timestamp.fromDate(new Date(config?.from)))
+          .where("end_tp", "<=", Timestamp.fromDate(new Date(config?.deadline)))
+          .get()
+          .then((querySnapshot) => {
+            // console.log(querySnapshot);
+            const uses_data = [] as UseProps[];
+            querySnapshot.forEach((documentSnapshot) => {
+              const use = documentSnapshot.data() as Omit<UseProps, "key">;
+              uses_data.push({ ...use, key: documentSnapshot.id });
+            });
+
+            console.log(uses_data);
+
+            // Addition des volumes
+            const total_volume = Array.isArray(uses_data)
+              ? uses_data.reduce(
+                  (sum, item) => sum + ("volume" in item ? item.volume : 0),
+                  0
+                )
+              : 0;
+
+            console.log(total_volume);
+
+            setData(total_volume);
+          })
+          .catch((e) => console.log(e));
+        break;
       }
       default:
         break;
@@ -251,39 +300,91 @@ export default function WidgetListItem(props: WidgetProps) {
         break;
       case "goal":
         const radius = 15;
+
+        const sensor_index = sensors.findIndex(
+          (item: SensorProps) => item.id == config?.sensor
+        );
+
+        const name = sensors[sensor_index].name;
+
+        const limit = config?.limit;
+
+        const progression = (data / limit) * 100;
+        const rest = data - limit;
+
+        const over = data > limit;
+        const warning = data / limit >= 0.75;
+
+        const pie_data = [
+          { value: progression, color: theme.tint },
+          { value: 100 - progression, color: theme.light_bg },
+        ];
+
+        const diff = moment(config?.deadline).diff(moment(), "days") + 1;
+
+        const text = () => {
+          if (over) {
+            return `Vous avez dépassé de ${rest} litre${
+              rest !== 1 ? "s" : ""
+            } l’objectif de ${limit} litre${limit !== 1 ? "s" : ""}.`;
+          } else if (warning) {
+            return `Attention, vous avez déjà consommé ${data} sur les ${limit} litre${
+              limit !== 1 ? "s" : ""
+            } d'objectif.\nIl vous reste ${diff} jour${
+              diff !== 1 ? "s" : ""
+            } !`;
+          } else {
+            return `Vous avez consommé ${data} litre${
+              data !== 1 ? "s" : ""
+            }. Il vous reste ${diff} jour${diff !== 1 ? "s" : ""}.`;
+          }
+        };
+
         return (
           <View style={styles.section}>
             <View style={styles.section_header}>
-              {config?.id && (
+              {config?.sensor && (
                 <Text
                   style={[
                     styles.section_header_title,
                     { color: theme.dark_text },
                   ]}
                 >
-                  Objectif sur {config.id == 1 ? "Douche" : "Lavabos"} :
+                  Objectif sur {name} :
                 </Text>
               )}
-              <PieChart
-                data={pie_sample_data}
-                innerRadius={radius - 7}
-                radius={radius}
-                donut
-                strokeWidth={1}
-                strokeColor={theme.stroke}
-                innerCircleBorderColor={theme.stroke}
-                innerCircleBorderWidth={1}
-              />
+              {over ? (
+                <X color={theme.error} strokeWidth={3.25} size={30} />
+              ) : (
+                <PieChart
+                  data={pie_data}
+                  innerRadius={radius - 7}
+                  radius={radius}
+                  donut
+                  strokeWidth={1}
+                  strokeColor={theme.stroke}
+                  innerCircleBorderColor={theme.stroke}
+                  innerCircleBorderWidth={1}
+                />
+              )}
             </View>
             <View style={styles.section_main}>
-              <Text style={styles.section_text}>
-                Attention, vous avez déjà consommé 9,2 litres. Il vous reste 5
-                jours !
-              </Text>
+              <Text style={styles.section_text}>{text()}</Text>
             </View>
             <View style={styles.section_footer}>
-              <Text style={[styles.section_footer_text, {}]}>
-                {pie_sample_data[0].value}%
+              <Text
+                style={[
+                  styles.section_footer_text,
+                  {
+                    color: over
+                      ? theme.error
+                      : warning
+                      ? theme.warning
+                      : theme.dark_text,
+                  },
+                ]}
+              >
+                {Math.round(progression)}%
               </Text>
             </View>
           </View>
@@ -389,7 +490,7 @@ export default function WidgetListItem(props: WidgetProps) {
     <Animated.View
       style={{
         transform: [{ scale: widget_scale }],
-        flex: size == 1 ? 0.5 : 1,
+        flex: flex_container ? (size == 1 ? 0.5 : 1) : 0,
         // flex: 1,
       }}
     >
@@ -402,6 +503,7 @@ export default function WidgetListItem(props: WidgetProps) {
           {
             backgroundColor: theme.light_text,
             borderColor: theme.stroke,
+            flex: flex_container ? 1 : 0,
           },
         ]}
       >
@@ -415,14 +517,15 @@ const styles = StyleSheet.create({
   item: {
     borderWidth: 2,
     borderRadius: 15,
-    flex: 1,
+    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 15,
+    overflow: "hidden",
   },
 
   section: {
-    flex: 1,
+    // flex: 1,
     gap: 8,
     width: "100%",
   },
@@ -435,7 +538,7 @@ const styles = StyleSheet.create({
   },
 
   section_main: {
-    flex: 1,
+    // flex: 1,
     gap: 2,
   },
 

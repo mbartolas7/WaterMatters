@@ -172,7 +172,9 @@ export default function HomeScreen() {
           }
           showsVerticalScrollIndicator={false}
           ListFooterComponent={() => (
-            <ButtonContainer action={() => router.push("/modal")}>
+            <ButtonContainer
+              action={() => router.navigate("/(modals)/widgets")}
+            >
               <View
                 style={[
                   styles.button,

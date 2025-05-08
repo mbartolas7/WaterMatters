@@ -53,17 +53,9 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="+not-found" />
                 <Stack.Screen
-                  name="modal"
+                  name="(modals)/widgets"
                   options={{
                     presentation: "modal",
-                    headerShown: false,
-                  }}
-                />
-                <Stack.Screen
-                  name="custom-widget-modal"
-                  options={{
-                    presentation: "card", // ⬅️ évite le "slide from bottom"
-                    animation: "slide_from_right", // ⬅️ anime horizontalement
                     headerShown: false,
                   }}
                 />

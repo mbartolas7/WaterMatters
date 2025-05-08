@@ -1,5 +1,5 @@
+import ButtonContainer from "@/components/button/ButtonContainer";
 import NewWidgetListItem from "@/components/NewWidgetListItem";
-import WidgetListItem from "@/components/WidgetListItem";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import setWidgetsData from "@/lib/setWidgetsData";
 import {
@@ -7,7 +7,7 @@ import {
   getWidgets,
 } from "@/redux/slices/widgetsSlice";
 import { router } from "expo-router";
-import { Info } from "lucide-react-native";
+import { Info, X } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   FlatList,
@@ -51,18 +51,14 @@ export default function Modal() {
 
     const formatted_data = setWidgetsData(not_formatted_data);
 
-    console.log(formatted_data);
-
     setData(formatted_data);
   };
 
-  const handleCancel = () => {
-    router.back();
-  };
-
-  const handleSave = () => {
-    router.back();
-  };
+  const title = () => (
+    <Text style={[styles.title, { color: theme.dark_text }]}>
+      Ajouter un widget
+    </Text>
+  );
 
   const info_widget = () => (
     <View
@@ -81,26 +77,21 @@ export default function Modal() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.light_bg }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleCancel}>
-          <Text style={styles.header_cancel}>Annuler</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSave}>
-          <Text style={[styles.header_save, { color: theme.tint }]}>
-            Enregistrer
-          </Text>
-        </TouchableOpacity>
-      </View>
       <FlatList
         style={styles.list}
         data={data}
         showsVerticalScrollIndicator={false}
         // Vertical gap
-        contentContainerStyle={{ gap: 10, paddingTop: 10, paddingBottom: 30 }}
+        contentContainerStyle={{ gap: 10, paddingTop: 70, paddingBottom: 120 }}
         // Horizontal gap
         columnWrapperStyle={{ gap: 10 }}
         numColumns={2}
-        ListHeaderComponent={() => info_widget()}
+        ListHeaderComponent={() => (
+          <>
+            {title()}
+            {info_widget()}
+          </>
+        )}
         renderItem={({ item, index }: { index: number; item: WidgetProps }) => {
           if (item.size == 0) return <></>;
 
@@ -116,18 +107,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 10,
   },
 
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 15,
-    paddingBottom: 10,
-    paddingHorizontal: 15,
-    width: "100%",
-  },
   header_cancel: {
     fontFamily: "Figtree-SemiBold",
     fontSize: 16,
@@ -140,6 +121,13 @@ const styles = StyleSheet.create({
   list: {
     width: "100%",
     paddingHorizontal: 15,
+  },
+
+  title: {
+    fontFamily: "Figtree-SemiBold",
+    fontSize: 24,
+    letterSpacing: -0.4,
+    marginBottom: 15,
   },
 
   info_widget: {

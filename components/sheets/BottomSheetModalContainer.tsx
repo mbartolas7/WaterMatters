@@ -146,6 +146,9 @@ const BottomSheetModalContainer = forwardRef(
 
     return (
       <BottomSheetModal
+        containerStyle={{ zIndex: 9999, elevation: 9999 }}
+        stackBehavior="replace"
+        detached={true}
         keyboardBehavior="extend"
         // keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustPan"

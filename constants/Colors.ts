@@ -27,6 +27,7 @@ export const Colors = {
 
     success: "#00B86B",
     error: "#E53535",
+    warning: "#FFA100",
   },
   dark: {
     light_text: "#fff",
@@ -46,5 +47,6 @@ export const Colors = {
 
     success: "#00B86B",
     error: "#E53535",
+    warning: "#FFA100",
   },
 };

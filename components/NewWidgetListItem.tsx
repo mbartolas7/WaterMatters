@@ -13,7 +13,7 @@ import { BarChart, PieChart } from "react-native-gifted-charts";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 import LogsListItem from "./widgets/LogsListItem";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import RunningDevicesListItem from "./widgets/RunningDevicesListItem";
 import * as Haptics from "expo-haptics";
 import {
@@ -23,18 +23,24 @@ import {
   pie_sample_data,
 } from "@/lib/getSampleData";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { getSensors } from "@/redux/slices/sensorsSlice";
 
 interface WidgetProps {
   size: 0 | 1 | 2;
   //   size: number;
   type: "chart" | "goal" | "current" | "logs";
   //   type: string;
-  config?: { id?: number; mode: string };
+  config?: { id?: number; mode: string; sensor?: number };
   key: number;
   id: number;
+  flex_container: boolean;
 }
 
-export default function NewWidgetListItem(props: WidgetProps) {
+export default function NewWidgetListItem({
+  flex_container = true,
+  ...props
+}: WidgetProps) {
   const { size, type, config, id } = props;
 
   const theme = useThemeColor();
@@ -42,6 +48,8 @@ export default function NewWidgetListItem(props: WidgetProps) {
   const widget_scale = useAnimatedValue(1);
 
   const dispatch = useDispatch();
+
+  const sensors = type == "goal" && useSelector(getSensors);
 
   const router = useRouter();
 
@@ -67,8 +75,20 @@ export default function NewWidgetListItem(props: WidgetProps) {
   };
 
   const handlePress = () => {
-    router.navigate("custom-widget-modal");
+    router.navigate({
+      pathname: "/(modals)/widgets/custom-widget",
+      params: {
+        type: type,
+        size: size,
+        id: id,
+        config: config ? JSON.stringify(config) : undefined,
+      },
+    });
   };
+
+  useEffect(() => {
+    console.log(config);
+  }, [config]);
 
   const renderContent = () => {
     switch (type) {
@@ -120,6 +140,12 @@ export default function NewWidgetListItem(props: WidgetProps) {
         break;
       case "goal":
         const radius = 15;
+
+        const sensor_index = config?.sensor
+          ? sensors.findIndex((item) => item.id == config.sensor)
+          : undefined;
+        const name = config?.sensor ? sensors[sensor_index].name : undefined;
+
         return (
           <View style={styles.section}>
             <View style={styles.section_header}>
@@ -129,27 +155,31 @@ export default function NewWidgetListItem(props: WidgetProps) {
                   { color: theme.dark_text },
                 ]}
               >
-                Objectif de conso. :
+                {config?.sensor
+                  ? `Objectif sur ${name}`
+                  : "Objectif de conso. :"}
               </Text>
-              <PieChart
-                data={pie_sample_data}
-                innerRadius={radius - 7}
-                radius={radius}
-                donut
-                strokeWidth={1}
-                strokeColor={theme.stroke}
-                innerCircleBorderColor={theme.stroke}
-                innerCircleBorderWidth={1}
-              />
+              {config?.sensor == undefined && (
+                <PieChart
+                  data={pie_sample_data}
+                  innerRadius={radius - 7}
+                  radius={radius}
+                  donut
+                  strokeWidth={1}
+                  strokeColor={theme.stroke}
+                  innerCircleBorderColor={theme.stroke}
+                  innerCircleBorderWidth={1}
+                />
+              )}
             </View>
             <View style={styles.section_main}>
               <Text style={styles.section_text}>
-                Ajoutez un objectif de consommation sur un appareil
+                Ajoutez un objectif de consommation sur cet appareil
               </Text>
             </View>
             <View style={styles.section_footer}>
               <Text style={[styles.section_footer_text, {}]}>
-                {pie_sample_data[0].value}%
+                {config?.sensor ? 0 : pie_sample_data[0].value}%
               </Text>
             </View>
           </View>
@@ -245,7 +275,7 @@ export default function NewWidgetListItem(props: WidgetProps) {
     <Animated.View
       style={{
         transform: [{ scale: widget_scale }],
-        flex: size == 1 ? 0.5 : 1,
+        flex: flex_container ? (size == 1 ? 0.5 : 1) : 0,
         // flex: 1,
       }}
     >
@@ -258,6 +288,7 @@ export default function NewWidgetListItem(props: WidgetProps) {
           {
             backgroundColor: theme.light_text,
             borderColor: theme.stroke,
+            flex: flex_container ? 1 : 0,
           },
         ]}
       >
@@ -271,14 +302,14 @@ const styles = StyleSheet.create({
   item: {
     borderWidth: 2,
     borderRadius: 15,
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 15,
+    overflow: "hidden",
   },
 
   section: {
-    flex: 1,
+    // flex: 1,
     gap: 8,
     width: "100%",
   },
@@ -291,7 +322,7 @@ const styles = StyleSheet.create({
   },
 
   section_main: {
-    flex: 1,
+    // flex: 1,
     gap: 2,
   },
 

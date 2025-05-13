@@ -46,6 +46,13 @@ const getChartData = async ({
 }: GetChartDataProps) => {
   let data = [] as UseProps[];
 
+  console.log("props");
+  console.log(type);
+  console.log(start_date);
+  console.log(end_date);
+  console.log(date_mode);
+  console.log(sensors);
+
   await usesCollection
     .where("begin_tp", ">=", start_date)
     .where("begin_tp", "<=", end_date)
@@ -95,15 +102,11 @@ const getChartData = async ({
         );
         const tempDate = start.clone();
 
-        // console.log(start);
-        // console.log(end);
-
         while (tempDate.isSameOrBefore(end)) {
           let key = "";
           switch (date_mode) {
             case "week":
               key = tempDate.format("WW-DD");
-              // console.log(key);
               tempDate.add(1, "day");
               break;
             case "month":
@@ -121,9 +124,6 @@ const getChartData = async ({
           }
           aggregationMap[key] = 0;
         }
-
-        console.log("aggregation: ");
-        console.log(aggregationMap);
 
         data.forEach((item) => {
           const item_date = moment(item.begin_tp);
@@ -149,9 +149,6 @@ const getChartData = async ({
           result.total_volume += item.volume;
           aggregationMap[key] += item.volume;
         });
-
-        console.log("aggregation with volume: ");
-        console.log(aggregationMap);
 
         // Formatter les labels
         result.data = Object.entries(aggregationMap).map(([label, value]) => {
@@ -222,8 +219,6 @@ const getChartData = async ({
           const sensor_index = sensors.findIndex(
             (item) => item.id.toString() == id
           );
-
-          console.log(sensor_index);
 
           let label = "";
 

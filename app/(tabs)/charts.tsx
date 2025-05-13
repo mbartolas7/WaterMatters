@@ -115,6 +115,8 @@ export default function ChartsScreen() {
   const defaultStyles = useDefaultStyles();
 
   const today = new Date();
+  const begin_today = new Date(today.setHours(0, 0, 0, 0));
+  const end_today = new Date(today.setHours(23, 59, 59, 999));
   const [selectedDate, setSelectedDate] = useState<DateType>(today);
   const [selectedStartDate, setSelectedStartDate] = useState<DateType>();
   const [selectedEndDate, setSelectedEndDate] = useState<DateType>();
@@ -122,8 +124,9 @@ export default function ChartsScreen() {
   const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
 
   const [appliedDate, setAppliedDate] = useState<DateType>(today);
-  const [appliedStartDate, setAppliedStartDate] = useState<DateType>(today);
-  const [appliedEndDate, setAppliedEndDate] = useState<DateType>(today);
+  const [appliedStartDate, setAppliedStartDate] =
+    useState<DateType>(begin_today);
+  const [appliedEndDate, setAppliedEndDate] = useState<DateType>(end_today);
 
   const date_picker_sheet = useRef<BottomSheetModalRef>(null);
 
@@ -153,6 +156,7 @@ export default function ChartsScreen() {
       date_mode: appliedMode,
       sensors: sensors,
     }).then((res) => {
+      console.log("data");
       console.log(res);
       setConsumptionData(res);
       setLoading(false);
@@ -176,7 +180,7 @@ export default function ChartsScreen() {
     switch (appliedMode) {
       case "single":
         if (moment(appliedDate).isSame(today, "day")) {
-          text += "Ajourd'hui, ";
+          text += "Aujourd'hui, ";
         } else if (
           moment(appliedDate).isSame(moment(today).subtract(1, "day"), "day")
         ) {
@@ -368,7 +372,6 @@ export default function ChartsScreen() {
           if (appliedMode !== "single")
             return (
               <View style={{ marginTop: 5 }}>
-                {/* <Text></Text> */}
                 <BarChart
                   data={consumptionData.data}
                   frontColor={theme.tint}
@@ -674,6 +677,7 @@ export default function ChartsScreen() {
           contentContainerStyle={{ paddingBottom: 120 }}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
         >
           <TouchableOpacity
             onPress={() => date_picker_sheet.current?.toggleShowBottomSheet()}

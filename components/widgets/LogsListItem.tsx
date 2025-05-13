@@ -32,9 +32,16 @@ export default function LogsListItem(props: LogsListItemProps) {
   const theme = useThemeColor();
 
   const formattedDuration = () => {
-    let text = `${Math.floor(duration / 60)}m`;
+    let text = "";
+    if (Math.floor(duration / 60) !== 0) {
+      text += `${Math.floor(duration / 60)}m`;
+    }
     if (duration % 60) {
-      text += ` ${duration % 60}s`;
+      text += `${text.length == 0 ? "" : " "}${duration % 60}s`;
+    }
+
+    if (text.length == 0) {
+      text += "0s";
     }
     return text;
   };

@@ -73,7 +73,6 @@ export const widgetsSlice = createSlice({
           widget_index !== state_length - 1 &&
           next_state[widget_index + 1].size == 0
         ) {
-          console.log(1);
           next_state.splice(widget_index, 2);
         } else if (
           widget_index >= 2 &&
@@ -82,17 +81,14 @@ export const widgetsSlice = createSlice({
             (next_state[widget_index - 1].size == 0 &&
               next_state[widget_index - 2].size == 0))
         ) {
-          console.log(2);
           next_state.splice(widget_index - 2, 2);
           next_state[widget_index - 2] = { size: 0 };
         } else if (
           widget_index == 1 &&
           next_state[widget_index - 1].size == 0
         ) {
-          console.log(3);
           next_state.splice(0, 2);
         } else {
-          console.log(4);
           next_state[widget_index] = { size: 0 };
         }
       }
@@ -100,6 +96,8 @@ export const widgetsSlice = createSlice({
     },
     addWidget: (state: WidgetProps[], action) => {
       let item = action.payload;
+
+      item.id = state.length;
 
       if (
         item.config.from !== undefined ||

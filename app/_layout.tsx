@@ -16,8 +16,9 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { ShowBottomTabProvider } from "@/contexts/ShowBottomTabContext";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
-import { store } from "@/redux/store";
+import { persistor, store } from "@/redux/store";
 import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -47,22 +48,27 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Provider store={store}>
-          <BottomSheetModalProvider>
-            <ShowBottomTabProvider>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-                <Stack.Screen
-                  name="(modals)/widgets"
-                  options={{
-                    presentation: "modal",
-                    headerShown: false,
-                  }}
-                />
-              </Stack>
-              <StatusBar style="auto" />
-            </ShowBottomTabProvider>
-          </BottomSheetModalProvider>
+          <PersistGate loading={null} persistor={persistor}>
+            <BottomSheetModalProvider>
+              <ShowBottomTabProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen name="+not-found" />
+                  <Stack.Screen
+                    name="(modals)/widgets"
+                    options={{
+                      presentation: "modal",
+                      headerShown: false,
+                    }}
+                  />
+                </Stack>
+                <StatusBar style="auto" />
+              </ShowBottomTabProvider>
+            </BottomSheetModalProvider>
+          </PersistGate>
         </Provider>
       </ThemeProvider>
     </GestureHandlerRootView>

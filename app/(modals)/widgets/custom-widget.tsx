@@ -230,9 +230,17 @@ export default function ModalStep2() {
             <DateTimePicker
               mode={"single"}
               date={config.deadline}
-              onChange={(date: object) =>
-                setConfig((prev) => ({ ...prev, deadline: date.date }))
-              }
+              onChange={(date: object) => {
+                const rawDate = new Date(date.date); // ou directement new Date("2025-05-13T14:43:53.178Z")
+                rawDate.setHours(23, 59, 59, 999); // change l'heure en place
+
+                const endOfDayISO = rawDate.toISOString(); // maintenant OK
+
+                setConfig((prev) => ({
+                  ...prev,
+                  deadline: endOfDayISO,
+                }));
+              }}
               styles={{
                 ...defaultStyles,
                 today: {

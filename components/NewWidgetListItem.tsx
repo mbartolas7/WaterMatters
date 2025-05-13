@@ -86,10 +86,6 @@ export default function NewWidgetListItem({
     });
   };
 
-  useEffect(() => {
-    console.log(config);
-  }, [config]);
-
   const renderContent = () => {
     switch (type) {
       case "chart":

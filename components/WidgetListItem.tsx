@@ -97,11 +97,6 @@ export default function WidgetListItem({
       ? Dimensions.get("window").width - 30 - 30
       : (Dimensions.get("window").width - 30 - 10) / 2;
 
-  const pie_sample_data = [
-    { value: 70, color: theme.tint },
-    { value: 30, color: theme.light_bg },
-  ];
-
   useEffect(() => {
     getData();
   }, []);
@@ -140,7 +135,6 @@ export default function WidgetListItem({
             sensors: sensors,
           })
             .then((res) => {
-              console.log(res);
               setData(res.data);
             })
             .catch((e) => console.log(e));
@@ -158,7 +152,6 @@ export default function WidgetListItem({
               uses_data.push({ ...use, key: documentSnapshot.id });
             });
 
-            console.log(uses_data);
             setData(uses_data);
           })
           .catch((e) => console.log(e));
@@ -175,7 +168,6 @@ export default function WidgetListItem({
               uses_data.push({ ...use, key: documentSnapshot.id });
             });
 
-            console.log(uses_data);
             setDataLength(uses_data.length);
             setData(uses_data.slice(0, 2));
           });
@@ -188,14 +180,11 @@ export default function WidgetListItem({
           .where("end_tp", "<=", Timestamp.fromDate(new Date(config?.deadline)))
           .get()
           .then((querySnapshot) => {
-            // console.log(querySnapshot);
             const uses_data = [] as UseProps[];
             querySnapshot.forEach((documentSnapshot) => {
               const use = documentSnapshot.data() as Omit<UseProps, "key">;
               uses_data.push({ ...use, key: documentSnapshot.id });
             });
-
-            console.log(uses_data);
 
             // Addition des volumes
             const total_volume = Array.isArray(uses_data)
@@ -204,8 +193,6 @@ export default function WidgetListItem({
                   0
                 )
               : 0;
-
-            console.log(total_volume);
 
             setData(total_volume);
           })
@@ -305,12 +292,17 @@ export default function WidgetListItem({
           (item: SensorProps) => item.id == config?.sensor
         );
 
+        if (!sensors) {
+          return <ActivityIndicator />;
+        }
+
         const name = sensors[sensor_index].name;
 
         const limit = config?.limit;
 
         const progression = (data / limit) * 100;
-        const rest = data - limit;
+        let rest = data - limit;
+        rest = parseFloat(rest.toFixed(2));
 
         const over = data > limit;
         const warning = data / limit >= 0.75;
@@ -341,7 +333,7 @@ export default function WidgetListItem({
         };
 
         return (
-          <View style={styles.section}>
+          <View style={[styles.section, { flex: flex_container ? 1 : 0 }]}>
             <View style={styles.section_header}>
               {config?.sensor && (
                 <Text
@@ -393,7 +385,7 @@ export default function WidgetListItem({
 
       case "current":
         return (
-          <View style={styles.section}>
+          <View style={[styles.section, { flex: flex_container ? 1 : 0 }]}>
             <View style={styles.section_header}>
               <Text style={styles.section_header_title}>
                 En cours d'utilisation :
@@ -405,30 +397,41 @@ export default function WidgetListItem({
                 ]}
               />
             </View>
-            <FlatList
-              scrollEnabled={false}
-              data={data}
-              style={[styles.section_main, { gap: 2 }]}
-              renderItem={({ item, index }) => (
-                <RunningDevicesListItem
-                  key={index}
-                  item={item}
-                  sensor={
-                    sensors.filter(
-                      (item2: SensorProps) => item2.id == item.id
-                    )[0]
-                  }
-                />
-              )}
-              ItemSeparatorComponent={() => (
-                <View
-                  style={[
-                    styles.section_divider,
-                    { backgroundColor: theme.stroke },
-                  ]}
-                />
-              )}
-            />
+            {dataLength == 0 ? (
+              <Text
+                style={[styles.section_text, { flex: flex_container ? 1 : 0 }]}
+              >
+                Vous n'avez aucun appareil en cours d'utilisation
+              </Text>
+            ) : (
+              <FlatList
+                scrollEnabled={false}
+                data={data}
+                style={[
+                  styles.section_main,
+                  { gap: 2, backgroundColor: "green" },
+                ]}
+                renderItem={({ item, index }) => (
+                  <RunningDevicesListItem
+                    key={index}
+                    item={item}
+                    sensor={
+                      sensors.filter(
+                        (item2: SensorProps) => item2.id == item.id
+                      )[0]
+                    }
+                  />
+                )}
+                ItemSeparatorComponent={() => (
+                  <View
+                    style={[
+                      styles.section_divider,
+                      { backgroundColor: theme.stroke },
+                    ]}
+                  />
+                )}
+              />
+            )}
             {dataLength !== undefined && dataLength > 3 && (
               <View style={styles.section_footer}>
                 <Text

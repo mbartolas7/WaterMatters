@@ -105,7 +105,6 @@ export default function ChallengesScreen() {
   const theme = useThemeColor();
 
   useEffect(() => {
-    // setChallenges(challenges_data);
     getData();
   }, []);
 

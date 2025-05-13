@@ -4,7 +4,7 @@
     "slug": "WaterMatters",
     "version": "0.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/water-matters.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "watter-matters",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -20,7 +20,7 @@
     "android": {
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.mbartolas7.WaterMatters"

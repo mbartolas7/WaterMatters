@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Cog, PencilLine } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,6 +27,7 @@ import Animated, {
 import { useDispatch, useSelector } from "react-redux";
 import { setSensors } from "@/redux/slices/sensorsSlice";
 import { getWidgets } from "@/redux/slices/widgetsSlice";
+import { RefreshControl } from "react-native";
 
 interface SensorProps {
   name: string;
@@ -76,6 +84,9 @@ const sensorsCollection = firestore().collection("sensors");
 export default function HomeScreen() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const insets = useSafeAreaInsets();
   const theme = useThemeColor();
 
@@ -114,6 +125,15 @@ export default function HomeScreen() {
       ],
     };
   });
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setRefreshKey((prev) => prev + 1);
+
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -168,7 +188,14 @@ export default function HomeScreen() {
           numColumns={2}
           style={[styles.main, { paddingTop: headerHeight }]}
           renderItem={({ item, index }) =>
-            item.size == 0 ? <></> : <WidgetListItem {...item} key={index} />
+            item.size == 0 ? (
+              <></>
+            ) : (
+              <WidgetListItem
+                {...item}
+                key={`widget-${item.id}-${refreshKey}`}
+              />
+            )
           }
           showsVerticalScrollIndicator={false}
           ListFooterComponent={() => (
@@ -193,6 +220,13 @@ export default function HomeScreen() {
           )}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          ListHeaderComponent={() => (
+            <View style={[styles.refreshing, { marginTop: -60 - 20 }]}>
+              <ActivityIndicator size="large" />
+            </View>
+          )}
         />
       )}
     </View>
@@ -251,5 +285,11 @@ const styles = StyleSheet.create({
     fontFamily: "Figtree-Medium",
     fontSize: 16,
     letterSpacing: -0.4,
+  },
+
+  refreshing: {
+    height: 60,
+    justifyContent: "flex-end",
+    // backgroundColor: "red",
   },
 });

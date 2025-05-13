@@ -63,13 +63,13 @@ export default function ChallengeListItem(props: ChallengeProps) {
               style={[
                 styles.item_progression_streak_number,
                 {
-                  color: theme.tint,
+                  color: theme.streak,
                 },
               ]}
             >
               {streak}
             </Text>
-            <Flame strokeWidth={3} size={22} color={theme.tint} />
+            <Flame strokeWidth={3} size={22} color={theme.streak} />
           </View>
         );
         break;
@@ -87,7 +87,7 @@ export default function ChallengeListItem(props: ChallengeProps) {
           <View
             style={[
               styles.item_progression_100,
-              { backgroundColor: theme.tint, borderColor: theme.stroke },
+              { backgroundColor: theme.success, borderColor: theme.stroke },
             ]}
           >
             <Check size={18} strokeWidth={2.25} color={theme.light_text} />

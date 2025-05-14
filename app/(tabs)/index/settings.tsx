@@ -47,7 +47,12 @@ export default function SettingsScreen() {
   const settingsListItem = (item: SettingProps, index: number) => {
     const { title, description, route_name } = item;
     return (
-      <ButtonContainer key={index} action={() => router.navigate(route_name)}>
+      <ButtonContainer
+        key={index}
+        action={() =>
+          route_name == "notifications" ? null : router.navigate(route_name)
+        }
+      >
         <View style={styles.list_item}>
           <Text style={[styles.list_item_title, { color: theme.dark_text }]}>
             {title}

@@ -345,7 +345,7 @@ export default function ChartsScreen() {
           <Text style={[styles.main_summary_text, { color: theme.dark_text }]}>
             Consommation totale :{" "}
             <Text style={styles.main_summary_text_number}>
-              {consumptionData.total_volume}L
+              {Math.round(consumptionData.total_volume * 100) / 100}L
             </Text>
           </Text>
         )}

@@ -1,4 +1,3 @@
-import ButtonContainer from "@/components/button/ButtonContainer";
 import NewWidgetListItem from "@/components/NewWidgetListItem";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import setWidgetsData from "@/lib/setWidgetsData";
@@ -6,16 +5,9 @@ import {
   getAllAvailableWidgets,
   getWidgets,
 } from "@/redux/slices/widgetsSlice";
-import { router } from "expo-router";
-import { Info, X } from "lucide-react-native";
+import { Info } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
 
 interface WidgetProps {

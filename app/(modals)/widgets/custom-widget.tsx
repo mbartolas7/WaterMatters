@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   Dimensions,
   TouchableOpacity,
@@ -16,12 +15,10 @@ import { useLocalSearchParams } from "expo-router";
 import WidgetListItem from "@/components/WidgetListItem";
 import NewWidgetListItem from "@/components/NewWidgetListItem";
 import { useEffect, useRef, useState } from "react";
-import BottomSheetModalContainer from "@/components/sheets/BottomSheetModalContainer";
 import { useDispatch, useSelector } from "react-redux";
 import { getSensors } from "@/redux/slices/sensorsSlice";
 import moment from "moment";
 import DateTimePicker, { useDefaultStyles } from "react-native-ui-datepicker";
-import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { addWidget } from "@/redux/slices/widgetsSlice";
 
 interface SensorProps {
@@ -60,7 +57,7 @@ export default function ModalStep2() {
       } else {
         if (type == "goal") {
           config_data = {
-            sensor: 1,
+            sensor: 6,
             limit: "15",
             deadline: moment().add(1, "day").toDate(),
             from: new Date(),
@@ -131,9 +128,14 @@ export default function ModalStep2() {
               <Text style={styles.custom_item_title}>Appareil : </Text>
               <TouchableOpacity
                 onPress={() => setSelectedCustom("sensor")}
-                style={styles.custom_item_touchable}
+                style={[styles.custom_item_touchable, { flex: 1 }]}
               >
-                <Text style={[styles.custom_item_touchable_text]}>{name}</Text>
+                <Text
+                  style={[styles.custom_item_touchable_text]}
+                  numberOfLines={2}
+                >
+                  {name}
+                </Text>
               </TouchableOpacity>
             </View>
             <View style={[styles.custom_item]}>

@@ -11,7 +11,9 @@ export default function RoomConsumptionListItem({
   item,
   index,
 }: RoomConsumptionProps) {
-  const { label, value } = item;
+  let { label, value } = item;
+
+  value = Math.round(value * 100) / 100;
 
   const theme = useThemeColor();
   return (

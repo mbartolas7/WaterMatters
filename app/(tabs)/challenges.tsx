@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Dimensions,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Trophy } from "lucide-react-native";
@@ -179,6 +185,8 @@ export default function ChallengesScreen() {
   };
 
   const headerComponent = useCallback(() => {
+    if (challenges.length == 0) return <ActivityIndicator />;
+
     const realized_challenges = challenges.filter(
       (item) => item.success
     ).length;

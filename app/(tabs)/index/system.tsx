@@ -50,6 +50,7 @@ interface BottomSheetModalRef {
 }
 
 const rooms_data = [
+  "Prototype",
   "Salle de bain",
   "Cuisine",
   "Chambre",
@@ -117,6 +118,8 @@ export default function SystemScreen() {
         .then(() => {
           Alert.alert("Succès", "Appareil renommé avec succès");
           rename_sheet.current?.toggleShowBottomSheet();
+
+          getData();
         })
         .catch((res) => {
           console.log(res);
@@ -136,6 +139,8 @@ export default function SystemScreen() {
         .then(() => {
           Alert.alert("Succès", "Pièce mise à jour avec succès");
           room_sheet.current?.toggleShowBottomSheet();
+
+          getData();
         })
         .catch((res) => {
           console.log(res);
@@ -155,6 +160,8 @@ export default function SystemScreen() {
         .then(() => {
           Alert.alert("Succès", "Type mis à jour avec succès");
           type_sheet.current?.toggleShowBottomSheet();
+
+          getData();
         })
         .catch((res) => {
           console.log(res);

@@ -52,58 +52,58 @@ export const widgetsSlice = createSlice({
       return action.payload;
     },
     removeWidget: (state: WidgetProps[], action) => {
-      console.log(state);
-
-      let next_state = state;
-
-      // next_state[6].config.deadline = "2025-05-17T00:00:00.581Z";
-      next_state[6].config.from = "2025-05-12T11:56:01.939Z";
-      // next_state[6].config.sensor = 6;
-      // next_state[2].config.limit = "180";
-
-      return next_state;
-
-      // const id = action.payload;
-      // let widget_index = state.findIndex((item) => item.id == id);
-
-      // const { size } = state[widget_index];
+      // console.log(state);
 
       // let next_state = state;
 
-      // const state_length = state.length;
+      // next_state[6].config.deadline = "2025-05-17T00:00:00.581Z";
+      // next_state[6].config.from = "2025-05-12T11:56:01.939Z";
+      // next_state[6].config.sensor = 6;
+      // next_state[2].config.limit = "180";
 
-      // if (size == 2) {
-      //   if (widget_index !== state_length - 1) {
-      //     // Delete the size = 0 item after the size = 2 widget
-      //     next_state.splice(widget_index, 2);
-      //   } else {
-      //     next_state.splice(widget_index, 1);
-      //   }
-      // } else {
-      //   if (
-      //     widget_index !== state_length - 1 &&
-      //     next_state[widget_index + 1].size == 0
-      //   ) {
-      //     next_state.splice(widget_index, 2);
-      //   } else if (
-      //     widget_index >= 2 &&
-      //     ((next_state[widget_index - 1].size == 0 &&
-      //       next_state[widget_index - 2].size == 1) ||
-      //       (next_state[widget_index - 1].size == 0 &&
-      //         next_state[widget_index - 2].size == 0))
-      //   ) {
-      //     next_state.splice(widget_index - 2, 2);
-      //     next_state[widget_index - 2] = { size: 0 };
-      //   } else if (
-      //     widget_index == 1 &&
-      //     next_state[widget_index - 1].size == 0
-      //   ) {
-      //     next_state.splice(0, 2);
-      //   } else {
-      //     next_state[widget_index] = { size: 0 };
-      //   }
-      // }
       // return next_state;
+
+      const id = action.payload;
+      let widget_index = state.findIndex((item) => item.id == id);
+
+      const { size } = state[widget_index];
+
+      let next_state = state;
+
+      const state_length = state.length;
+
+      if (size == 2) {
+        if (widget_index !== state_length - 1) {
+          // Delete the size = 0 item after the size = 2 widget
+          next_state.splice(widget_index, 2);
+        } else {
+          next_state.splice(widget_index, 1);
+        }
+      } else {
+        if (
+          widget_index !== state_length - 1 &&
+          next_state[widget_index + 1].size == 0
+        ) {
+          next_state.splice(widget_index, 2);
+        } else if (
+          widget_index >= 2 &&
+          ((next_state[widget_index - 1].size == 0 &&
+            next_state[widget_index - 2].size == 1) ||
+            (next_state[widget_index - 1].size == 0 &&
+              next_state[widget_index - 2].size == 0))
+        ) {
+          next_state.splice(widget_index - 2, 2);
+          next_state[widget_index - 2] = { size: 0 };
+        } else if (
+          widget_index == 1 &&
+          next_state[widget_index - 1].size == 0
+        ) {
+          next_state.splice(0, 2);
+        } else {
+          next_state[widget_index] = { size: 0 };
+        }
+      }
+      return next_state;
     },
     addWidget: (state: WidgetProps[], action) => {
       let item = action.payload;

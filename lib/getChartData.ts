@@ -54,6 +54,7 @@ const getChartData = async ({
   console.log(sensors);
 
   await usesCollection
+    .where("running", "==", false)
     .where("begin_tp", ">=", start_date)
     .where("begin_tp", "<=", end_date)
     .orderBy("begin_tp", "desc")

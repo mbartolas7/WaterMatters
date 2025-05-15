@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
   FlatList,
@@ -23,7 +24,6 @@ import {
   pie_sample_data,
 } from "@/lib/getSampleData";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
 import { getSensors } from "@/redux/slices/sensorsSlice";
 
 interface WidgetProps {
@@ -49,7 +49,7 @@ export default function NewWidgetListItem({
 
   const dispatch = useDispatch();
 
-  const sensors = type == "goal" && useSelector(getSensors);
+  const sensors = type == "goal" && (useSelector(getSensors) ?? []);
 
   const router = useRouter();
 
@@ -137,10 +137,18 @@ export default function NewWidgetListItem({
       case "goal":
         const radius = 15;
 
+        if (sensors.length == 0) {
+          return <ActivityIndicator />;
+        }
+
         const sensor_index = config?.sensor
           ? sensors.findIndex((item) => item.id == config.sensor)
           : undefined;
-        const name = config?.sensor ? sensors[sensor_index].name : undefined;
+
+        let name = "";
+        if (sensor_index !== -1) {
+          name = config?.sensor ? sensors[sensor_index].name : undefined;
+        }
 
         return (
           <View style={styles.section}>

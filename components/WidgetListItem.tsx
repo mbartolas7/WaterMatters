@@ -86,7 +86,7 @@ export default function WidgetListItem({
   const [dataLength, setDataLength] = useState<number>();
   const [loading, setLoading] = useState<boolean>(true);
 
-  const sensors = useSelector(getSensors);
+  const sensors = useSelector(getSensors) ?? [];
 
   const widget_scale = useAnimatedValue(1);
 
@@ -144,6 +144,7 @@ export default function WidgetListItem({
         await usesCollection
           .limit(4)
           .orderBy("begin_tp", "desc")
+          .where("running", "==", false)
           .get()
           .then((querySnapshot) => {
             const uses_data = [] as UseProps[];
@@ -292,11 +293,15 @@ export default function WidgetListItem({
           (item: SensorProps) => item.id == config?.sensor
         );
 
-        if (!sensors) {
+        if (sensors.length == 0) {
           return <ActivityIndicator />;
         }
 
-        const name = sensors[sensor_index].name;
+        let name = "";
+
+        if (sensor_index !== -1) {
+          name = sensors[sensor_index].name;
+        }
 
         const limit = config?.limit;
 
@@ -407,10 +412,7 @@ export default function WidgetListItem({
               <FlatList
                 scrollEnabled={false}
                 data={data}
-                style={[
-                  styles.section_main,
-                  { gap: 2, backgroundColor: "green" },
-                ]}
+                style={[styles.section_main, { gap: 2 }]}
                 renderItem={({ item, index }) => (
                   <RunningDevicesListItem
                     key={index}
@@ -418,7 +420,7 @@ export default function WidgetListItem({
                     sensor={
                       sensors.filter(
                         (item2: SensorProps) => item2.id == item.id
-                      )[0]
+                      )[0] ?? "null"
                     }
                   />
                 )}
@@ -472,7 +474,7 @@ export default function WidgetListItem({
                   sensor={
                     sensors.filter(
                       (item2: SensorProps) => item2.id == item.id
-                    )[0]
+                    )[0] ?? "null"
                   }
                 />
               )}

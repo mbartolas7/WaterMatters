@@ -27,7 +27,6 @@ import { BottomSheetView } from "@gorhom/bottom-sheet";
 
 import { useThemeColor } from "@/hooks/useThemeColor";
 import moment from "moment";
-import "moment/locale/fr"; // Importer la locale française
 import { ChevronDown } from "lucide-react-native";
 import { useShowBottomTab } from "@/hooks/useShowBottomTab";
 import { BarChart } from "react-native-gifted-charts";
@@ -143,24 +142,26 @@ export default function ChartsScreen() {
     total_volume: 0,
   });
 
-  const sensors = useSelector(getSensors);
+  const sensors = useSelector(getSensors) ?? [];
 
   const chart_width = Dimensions.get("window").width - 30 - 30;
 
   useEffect(() => {
     setLoading(true);
-    getChartData({
-      type: selectedType,
-      start_date: appliedStartDate,
-      end_date: appliedEndDate,
-      date_mode: appliedMode,
-      sensors: sensors,
-    }).then((res) => {
-      console.log("data");
-      console.log(res);
-      setConsumptionData(res);
-      setLoading(false);
-    });
+    if (sensors.length !== 0) {
+      getChartData({
+        type: selectedType,
+        start_date: appliedStartDate,
+        end_date: appliedEndDate,
+        date_mode: appliedMode,
+        sensors: sensors,
+      }).then((res) => {
+        console.log("data");
+        console.log(res);
+        setConsumptionData(res);
+        setLoading(false);
+      });
+    }
   }, [
     appliedDate,
     appliedMode,

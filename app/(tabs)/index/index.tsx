@@ -27,7 +27,6 @@ import Animated, {
 import { useDispatch, useSelector } from "react-redux";
 import { setSensors } from "@/redux/slices/sensorsSlice";
 import { getWidgets } from "@/redux/slices/widgetsSlice";
-import { RefreshControl } from "react-native";
 
 interface SensorProps {
   name: string;
@@ -35,49 +34,6 @@ interface SensorProps {
   id: number;
   key: string;
 }
-
-// const widgets = [
-//   {
-//     size: 2,
-//     type: "chart",
-//     config: {},
-//   },
-//   { size: 0 },
-//   {
-//     size: 1,
-//     type: "goal",
-//     config: {
-//       id: 1,
-//     },
-//   },
-// {
-//   size: 1,
-//   type: "current",
-// },
-//   {
-//     size: 2,
-//     type: "logs",
-//   },
-//   { size: 0 },
-//   {
-//     size: 1,
-//     type: "goal",
-//     config: {
-//       id: 2,
-//     },
-//   },
-//   {
-//     size: 1,
-//     type: "goal",
-//     config: {
-//       id: 1,
-//     },
-//   },
-//   {
-//     size: 2,
-//     type: "logs",
-//   },
-// ] as const;
 
 const sensorsCollection = firestore().collection("sensors");
 
@@ -183,8 +139,7 @@ export default function HomeScreen() {
           }}
           // Horizontal gap
           columnWrapperStyle={{ gap: 10 }}
-          data={widgets}
-          // data={widgets.slice(2, 6)}
+          data={widgets ?? []}
           numColumns={2}
           style={[styles.main, { paddingTop: headerHeight }]}
           renderItem={({ item, index }) =>
@@ -290,6 +245,5 @@ const styles = StyleSheet.create({
   refreshing: {
     height: 60,
     justifyContent: "flex-end",
-    // backgroundColor: "red",
   },
 });

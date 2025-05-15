@@ -11,6 +11,9 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import moment from "moment";
+import "moment/locale/fr"; // Importer la locale française
+
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 import { ShowBottomTabProvider } from "@/contexts/ShowBottomTabContext";
@@ -40,6 +43,8 @@ export default function RootLayout() {
     }
   }, [loaded, error]);
 
+  const loadingComp = () => <></>;
+
   if (!loaded && !error) {
     return null;
   }
@@ -48,7 +53,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
+          <PersistGate loading={loadingComp()} persistor={persistor}>
             <BottomSheetModalProvider>
               <ShowBottomTabProvider>
                 <Stack>
